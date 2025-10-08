@@ -59,22 +59,19 @@ class _SelectMedicamentoScreenState extends State<SelectMedicamentoScreen> {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _buildModalTitle('Signos Vitales (SING V)'),
-            _buildModalListTile(context, 'Heart Rate (Frecuencia Cardíaca)'),
-            _buildModalListTile(
-              context,
-              'Respiratory Rate (Frecuencia Respiratoria)',
-            ),
-            _buildModalListTile(context, 'Blood Pressure (Presión Arterial)'),
-            _buildModalListTile(context, 'Temperature (Temperatura)'),
-            _buildModalListTile(
-              context,
-              'Oxygen Saturation (Saturación de Oxígeno)',
-            ),
-          ],
+        return Container(
+          height: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              _buildModalTitle('Signos Vitales (SING V)'),
+              _buildModalListTile(context, 'Frecuencia Cardíaca'),
+              _buildModalListTile(context, 'Frecuencia Respiratoria'),
+              _buildModalListTile(context, 'Presión Arterial'),
+              _buildModalListTile(context, 'Temperatura'),
+              _buildModalListTile(context, 'Saturación de Oxígeno'),
+            ],
+          ),
         );
       },
     );
@@ -84,13 +81,16 @@ class _SelectMedicamentoScreenState extends State<SelectMedicamentoScreen> {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            _buildModalTitle('Presión Arterial Media (PAM)'),
-            _buildModalListTile(context, 'Presión Arterial Mujeres'),
-            _buildModalListTile(context, 'Presión Arterial Hombres'),
-          ],
+        return Container(
+          height: 250,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              _buildModalTitle('Presión Arterial Media (PAM)'),
+              _buildModalListTile(context, 'Presión Arterial Mujeres'),
+              _buildModalListTile(context, 'Presión Arterial Hombres'),
+            ],
+          ),
         );
       },
     );
