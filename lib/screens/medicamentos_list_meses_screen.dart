@@ -11,6 +11,7 @@ import 'package:mi_app/screens/heart_rate_screen.dart';
 import 'package:mi_app/screens/respiratory_rate_screen.dart';
 import 'package:mi_app/screens/blood_pressure_screen.dart';
 import 'package:mi_app/screens/temperature_screen.dart';
+import 'package:mi_app/screens/oxygen_saturation_screen.dart';
 
 class MedicamentosListMesesScreen extends StatefulWidget {
   final Paciente paciente;
@@ -247,6 +248,14 @@ class _MedicamentosListMesesScreenState
                   const TemperatureScreen(), // Navega a la nueva pantalla
             ),
           );
+        } else if (title == 'Oxygen Saturation (Saturación de Oxígeno)') {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) =>
+                  const OxygenSaturationScreen(), // Navegación final de SING V
+            ),
+          );
+          // Lógica de navegación PAM (solo muestra un mensaje temporal por ahora)
         } else {
           // Para las demás opciones, puedes dejar la lógica temporal o agregar más navegación
           ScaffoldMessenger.of(context).showSnackBar(
