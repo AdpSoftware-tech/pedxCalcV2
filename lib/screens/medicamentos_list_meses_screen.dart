@@ -8,6 +8,7 @@ import 'package:mi_app/models/medicamento.dart';
 import 'package:mi_app/models/medicamento_calculado.dart';
 import 'package:mi_app/screens/calculos_especiales_screen.dart';
 import 'package:mi_app/screens/heart_rate_screen.dart';
+import 'package:mi_app/screens/respiratory_rate_screen.dart';
 
 class MedicamentosListMesesScreen extends StatefulWidget {
   final Paciente paciente;
@@ -222,6 +223,13 @@ class _MedicamentosListMesesScreenState
         if (title == 'Heart Rate (Frecuencia Cardíaca)') {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const HeartRateScreen()),
+          );
+        } else if (title == 'Respiratory Rate (Frecuencia Respiratoria)') {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) =>
+                  const RespiratoryRateScreen(), // Navega a la nueva pantalla
+            ),
           );
         } else {
           // Para las demás opciones, puedes dejar la lógica temporal o agregar más navegación
