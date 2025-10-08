@@ -12,6 +12,8 @@ import 'package:mi_app/screens/respiratory_rate_screen.dart';
 import 'package:mi_app/screens/blood_pressure_screen.dart';
 import 'package:mi_app/screens/temperature_screen.dart';
 import 'package:mi_app/screens/oxygen_saturation_screen.dart';
+import 'package:mi_app/screens/presion_arterial_mujeres_screen.dart';
+import 'package:mi_app/screens/presion_arterial_hombres_screen.dart';
 
 class MedicamentosListMesesScreen extends StatefulWidget {
   final Paciente paciente;
@@ -256,6 +258,19 @@ class _MedicamentosListMesesScreenState
             ),
           );
           // Lógica de navegación PAM (solo muestra un mensaje temporal por ahora)
+        } else if (title == 'Presión Arterial Mujeres') {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) =>
+                  const PresionArterialMujeresScreen(), // ¡Navegación a la nueva tabla!
+            ),
+          );
+        } else if (title == 'Presión Arterial Hombres') {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const PresionArterialHombresScreen(),
+            ), // ¡NAVEGACIÓN FINALIZADA!
+          );
         } else {
           // Para las demás opciones, puedes dejar la lógica temporal o agregar más navegación
           ScaffoldMessenger.of(context).showSnackBar(
