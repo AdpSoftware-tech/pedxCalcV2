@@ -174,17 +174,11 @@ class _MedicamentosListMesesScreenState
                 ),
               ),
               const Divider(),
-              _buildModalListTile(context, 'Heart Rate (Frecuencia Cardíaca)'),
-              _buildModalListTile(
-                context,
-                'Respiratory Rate (Frecuencia Respiratoria)',
-              ),
-              _buildModalListTile(context, 'Blood Pressure (Presión Arterial)'),
-              _buildModalListTile(context, 'Temperature (Temperatura)'),
-              _buildModalListTile(
-                context,
-                'Oxygen Saturation (Saturación de Oxígeno)',
-              ),
+              _buildModalListTile(context, 'Frecuencia Cardíaca'),
+              _buildModalListTile(context, 'Frecuencia Respiratoria'),
+              _buildModalListTile(context, 'Presión Arterial'),
+              _buildModalListTile(context, 'Temperatura'),
+              _buildModalListTile(context, 'Saturación de Oxígeno'),
               const SizedBox(height: 10),
             ],
           ),
@@ -223,56 +217,46 @@ class _MedicamentosListMesesScreenState
       title: Text(title),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: () {
-        // Cierra el modal antes de navegar
         Navigator.pop(context);
-        if (title == 'Heart Rate (Frecuencia Cardíaca)') {
+        if (title == 'Frecuencia Cardíaca') {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const HeartRateScreen()),
           );
-        } else if (title == 'Respiratory Rate (Frecuencia Respiratoria)') {
+        } else if (title == 'Frecuencia Respiratoria') {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) =>
-                  const RespiratoryRateScreen(), // Navega a la nueva pantalla
+              builder: (context) => const RespiratoryRateScreen(),
             ),
           );
-        } else if (title == 'Blood Pressure (Presión Arterial)') {
+        } else if (title == 'Presión Arterial') {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) =>
-                  const BloodPressureScreen(), // Navega a la nueva pantalla
+              builder: (context) => const BloodPressureScreen(),
             ),
           );
-        } else if (title == 'Temperature (Temperatura)') {
+        } else if (title == 'Temperatura') {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const TemperatureScreen()),
+          );
+        } else if (title == 'Saturación de Oxígeno') {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) =>
-                  const TemperatureScreen(), // Navega a la nueva pantalla
+              builder: (context) => const OxygenSaturationScreen(),
             ),
           );
-        } else if (title == 'Oxygen Saturation (Saturación de Oxígeno)') {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) =>
-                  const OxygenSaturationScreen(), // Navegación final de SING V
-            ),
-          );
-          // Lógica de navegación PAM (solo muestra un mensaje temporal por ahora)
         } else if (title == 'Presión Arterial Mujeres') {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) =>
-                  const PresionArterialMujeresScreen(), // ¡Navegación a la nueva tabla!
+              builder: (context) => const PresionArterialMujeresScreen(),
             ),
           );
         } else if (title == 'Presión Arterial Hombres') {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => const PresionArterialHombresScreen(),
-            ), // ¡NAVEGACIÓN FINALIZADA!
+            ),
           );
         } else {
-          // Para las demás opciones, puedes dejar la lógica temporal o agregar más navegación
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Navegando a la pantalla de: $title')),
           );
@@ -280,8 +264,6 @@ class _MedicamentosListMesesScreenState
       },
     );
   }
-
-  // --- FIN DE FUNCIONES AUXILIARES ---
 
   @override
   Widget build(BuildContext context) {

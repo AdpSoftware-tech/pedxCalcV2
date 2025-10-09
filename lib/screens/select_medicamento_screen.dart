@@ -115,27 +115,27 @@ class _SelectMedicamentoScreenState extends State<SelectMedicamentoScreen> {
         Navigator.pop(context);
 
         // Lógica de navegación Signos Vitales (JÓVENES)
-        if (title == 'Heart Rate (Frecuencia Cardíaca)') {
+        if (title == 'Frecuencia Cardíaca') {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const HeartRateScreenJ()),
           );
-        } else if (title == 'Respiratory Rate (Frecuencia Respiratoria)') {
+        } else if (title == 'Frecuencia Respiratoria') {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => const RespiratoryRateScreenJ(),
             ),
           );
-        } else if (title == 'Blood Pressure (Presión Arterial)') {
+        } else if (title == 'Presión Arterial') {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => const BloodPressureScreenJ(),
             ),
           );
-        } else if (title == 'Temperature (Temperatura)') {
+        } else if (title == 'Temperatura') {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const TemperatureScreenJ()),
           );
-        } else if (title == 'Oxygen Saturation (Saturación de Oxígeno)') {
+        } else if (title == 'Saturación de Oxígeno') {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => const OxygenSaturationScreenJ(),

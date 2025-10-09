@@ -192,7 +192,7 @@ class PrintablePatientDataScreen extends StatelessWidget {
                       return [
                         med.medicamentoOriginal.nombre,
                         dosisToDisplay,
-                        med.medicamentoOriginal.observaciones ?? 'N/A',
+                        med.medicamentoOriginal.observaciones,
                       ];
                     }).toList(),
                   ),

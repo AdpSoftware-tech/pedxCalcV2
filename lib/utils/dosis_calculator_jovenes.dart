@@ -17,13 +17,12 @@ class DosisCalculatorJovenes {
     double resultado = (requerimientoTotal * porcentaje) / 100;
     double goteoMlH = resultado / 24;
 
-    double solGlucosada = 0.0;
-
     return {
       'solucion_mixta': '${requerimientoTotal.toStringAsFixed(2)} cc',
       'resultado': '${resultado.toStringAsFixed(2)} cc',
       'goteo_ml_h': '${goteoMlH.toStringAsFixed(2)} ml/h',
-      'goteo_ml_h_ajustado': '${(goteoMlH / 3).toStringAsFixed(2)}',
+      'goteo_ml_h_ajustado':
+          '${_roundDouble(goteoMlH / 3, 2).toStringAsFixed(2)} ml/h',
     };
   }
 

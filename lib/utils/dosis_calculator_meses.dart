@@ -68,7 +68,7 @@ class DosisCalculatorMeses {
       'calculohco3': deficit,
       'deficit_display': 'Déficit: ${formatDosis(deficit)} mL',
       'volumen_display': 'Volumen: ${formatDosis(volumen)} mL',
-      'velocidad_display': 'Velocidad: ${velocidadRedondeada} mL/h',
+      'velocidad_display': 'Velocidad: $velocidadRedondeada mL/h',
     };
   }
 
@@ -133,22 +133,16 @@ class DosisCalculatorMeses {
     double dosisMl = 0.0;
     double dosisMg = 0.0;
     double dosisJulios = 0.0;
-    String display_string = '';
-
-    final double peso = paciente.pesoKg!;
-    final int edadMeses = paciente.edadMeses ?? 0;
+    String displayString = '';
+    final double peso = paciente.pesoKg;
+    final int edadMeses = paciente.edadMeses;
     int mlDecimalPlaces = 1;
     int mgDecimalPlaces = 1;
-
     if (medicamento.nombre == 'Catéter femoral:' ||
         medicamento.nombre.trim() == 'Catéter yugular:') {
       final String catheterSize = _calculateCatheterSize(edadMeses);
       return {'display_string': catheterSize};
     }
-
-    // -- Lógica específica para Adrenalina IV --
-    //===========================================================
-    //============== test =======================================
     if (medicamento.nombre == 'Adrenalina IV') {
       dosisMl = peso * 0.1;
     } else if (medicamento.nombre == 'Adrenalina ET') {
@@ -225,7 +219,7 @@ class DosisCalculatorMeses {
         dosisMl = (peso * 0.1);
       } else if (medicamento.categoria == 'Endocrino / Renal') {
         final double dosisMcG = (peso / 5) * 12;
-        display_string = '${dosisMcG.toStringAsFixed(1)} UI';
+        displayString = '${dosisMcG.toStringAsFixed(1)} UI';
       }
     } else if (medicamento.nombre == 'Furosemida') {
       dosisMg = (peso * 0.5);
@@ -234,7 +228,7 @@ class DosisCalculatorMeses {
     else if (medicamento.nombre == 'Fentanilo') {
       if (medicamento.categoria == 'Infusiones sedación') {
         final double dosisMcG = peso * 250;
-        display_string = '${dosisMcG.toStringAsFixed(1)} mcg';
+        displayString = '${dosisMcG.toStringAsFixed(1)} mcg';
       } else if (medicamento.categoria == 'Analgesia') {
         dosisMl = (peso * 2) / 50;
       }
@@ -266,7 +260,7 @@ class DosisCalculatorMeses {
 
         final double dosisMlPorHora = c152 / 3;
         final double dosisRedondeada = _roundDouble(dosisMlPorHora, 0);
-        display_string =
+        displayString =
             '${DosisCalculatorMeses.formatDosis(dosisRedondeada)} ml/h';
       }
     } else if (medicamento.nombre == 'Ketamina' ||
@@ -309,10 +303,10 @@ class DosisCalculatorMeses {
     } else if (medicamento.nombre == 'Flujo') {
       if (peso <= 10) {
         final double dosisLPorMin = peso * 2;
-        display_string = '${dosisLPorMin.toStringAsFixed(2)} L/min';
+        displayString = '${dosisLPorMin.toStringAsFixed(2)} L/min';
       } else {
         final double dosisLPorMin = ((peso - 10) * 0.5) + 20;
-        display_string = '${dosisLPorMin.toStringAsFixed(2)} L/min';
+        displayString = '${dosisLPorMin.toStringAsFixed(2)} L/min';
       }
     } else if (medicamento.nombre == 'Adrenalina IM.') {
       if (peso <= 30) {
@@ -351,7 +345,7 @@ class DosisCalculatorMeses {
     } else if (medicamento.nombre == 'Goteo') {
       final double dosisMlPorDia = _calculateSolucionMixta(paciente);
       final double dosisMlPorHora = dosisMlPorDia / 24;
-      display_string =
+      displayString =
           '${DosisCalculatorMeses.formatDosis(dosisMlPorHora)} ml/h';
     } else if (medicamento.nombre == 'Resultado') {
       final double dosisBase = _calculateSolucionMixta(paciente);
@@ -389,29 +383,28 @@ class DosisCalculatorMeses {
       dosisMg = (peso * 40) / 3;
       mgDecimalPlaces = 0;
     } else if (medicamento.nombre == 'TET sin balón') {
-      final int edadMeses = paciente.edadMeses ?? 0;
+      final int edadMeses = paciente.edadMeses;
       final double edadMesesDouble = edadMeses.toDouble();
 
       final double valorNumerico = (edadMesesDouble / 4) + 4;
       final double tetSize = ((valorNumerico * 2).round()) / 2;
 
-      display_string = '${tetSize.toStringAsFixed(1)} mm';
+      displayString = '${tetSize.toStringAsFixed(1)} mm';
     } else if (medicamento.nombre == 'TET con balón') {
-      final int edadMeses = paciente.edadMeses ?? 0;
+      final int edadMeses = paciente.edadMeses;
       final double edadMesesDouble = edadMeses.toDouble();
 
       final double valorNumerico = (edadMesesDouble / 4) + 3.5;
 
       final double tetSize = ((valorNumerico * 2).round()) / 2;
 
-      display_string = '${tetSize.toStringAsFixed(1)} mm';
+      displayString = '${tetSize.toStringAsFixed(1)} mm';
     } else if (medicamento.nombre == 'Longitud inserción a comisura labial') {
-      final int edadMeses = paciente.edadMeses ?? 0;
+      final int edadMeses = paciente.edadMeses;
       final double edadMesesDouble = edadMeses.toDouble();
-
       final double longitudCm = (edadMesesDouble / 2) + 12;
 
-      display_string = '${longitudCm.toStringAsFixed(1)} cm';
+      displayString = '${longitudCm.toStringAsFixed(1)} cm';
     } else if (medicamento.nombre == 'Talla de cánula según peso') {
       final String talla = _calculateTalla(peso);
       return {'display_string': talla};
@@ -421,8 +414,8 @@ class DosisCalculatorMeses {
       );
     }
 
-    if (display_string.isNotEmpty) {
-      return {'display_string': display_string};
+    if (displayString.isNotEmpty) {
+      return {'display_string': displayString};
     } else {
       dosisMg = _roundDouble(dosisMg, mgDecimalPlaces);
       dosisMl = _roundDouble(dosisMl, mlDecimalPlaces);

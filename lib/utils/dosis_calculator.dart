@@ -54,9 +54,9 @@ class DosisCalculator {
     double dosisMg = 0.0;
     double dosisMl = 0.0;
     double dosisJulios = 0.0;
-    String display_string = '';
+    String displayString = '';
 
-    if (paciente.pesoKg == null || paciente.pesoKg <= 0) {
+    if (paciente.pesoKg <= 0) {
       debugPrint('Error: El peso del paciente es nulo o cero.');
       return {'ml': 0.0, 'mg': 0.0, 'julios': 0.0};
     }
@@ -364,13 +364,13 @@ class DosisCalculator {
       final double dosisEnMg = peso * 0.5;
       final double dosisRedondeada = _roundDouble(dosisEnMg, 1);
 
-      display_string = '${dosisRedondeada.toStringAsFixed(0)} g';
+      displayString = '${dosisRedondeada.toStringAsFixed(0)} g';
 
       return {
         'ml': 0.0,
         'mg': dosisEnMg,
         'julios': 0.0,
-        'display_string': display_string,
+        'display_string': displayString,
       };
     } else if (medicamento.nombre == 'Midazolam IN') {
       dosisMl = (peso * 0.4) / 5;
