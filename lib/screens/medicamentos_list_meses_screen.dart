@@ -78,7 +78,7 @@ class _MedicamentosListMesesScreenState
           final categoriaLower = medicamento.categoria.toLowerCase();
           final subcategoriaLower =
               medicamento.subcategoria?.toLowerCase() ?? '';
-          final dosisLower = medicamento.dosisActualMG?.toLowerCase() ?? '';
+          final dosisLower = medicamento.dosisActualMG.toLowerCase();
 
           return nombreLower.contains(query) ||
               categoriaLower.contains(query) ||
