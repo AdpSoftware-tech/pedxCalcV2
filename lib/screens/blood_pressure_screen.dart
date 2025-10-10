@@ -118,10 +118,10 @@ class BloodPressureScreen extends StatelessWidget {
             Table(
               border: TableBorder.all(color: Colors.black, width: 1.0),
               columnWidths: const {
-                0: FlexColumnWidth(1.5), // Age
-                1: FlexColumnWidth(1.3), // Systolic
-                2: FlexColumnWidth(1.3), // Diastolic
-                3: FlexColumnWidth(2.0), // Systolic Hypotension
+                0: FlexColumnWidth(1.5),
+                1: FlexColumnWidth(1.3),
+                2: FlexColumnWidth(1.3),
+                3: FlexColumnWidth(2.0),
               },
               children: [
                 _buildComplexHeader(),
