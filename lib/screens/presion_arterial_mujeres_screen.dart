@@ -54,22 +54,13 @@ class PresionArterialMujeresScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Presión Arterial de Mujeres de 1 Semana a 18 Años de Edad',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: tableHeaderColor,
-              ),
-            ),
-            const SizedBox(height: 15),
-
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingRowHeight: 60,
+                headingRowHeight: 50,
                 columnSpacing: 10,
-                dataRowHeight: 40,
+                // ignore: deprecated_member_use
+                dataRowHeight: 70,
                 border: TableBorder.all(color: Colors.grey.shade400, width: 1),
 
                 columns: [
