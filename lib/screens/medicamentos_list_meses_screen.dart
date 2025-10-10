@@ -18,8 +18,7 @@ import 'package:mi_app/screens/presion_arterial_hombres_screen.dart';
 class MedicamentosListMesesScreen extends StatefulWidget {
   final Paciente paciente;
 
-  const MedicamentosListMesesScreen({Key? key, required this.paciente})
-    : super(key: key);
+  const MedicamentosListMesesScreen({super.key, required this.paciente});
 
   @override
   _MedicamentosListMesesScreenState createState() =>
@@ -575,7 +574,9 @@ class _MedicamentosListMesesScreenState
         tileColor: Colors.white,
         selectedTileColor: Theme.of(
           context,
+          // ignore: deprecated_member_use
         ).colorScheme.primary.withOpacity(0.05),
+        // ignore: deprecated_member_use
         splashColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
       ),
     );
