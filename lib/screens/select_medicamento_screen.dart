@@ -21,8 +21,7 @@ import 'package:mi_app/screens/presion_arterial_hombres_screen_jovenes.dart';
 class SelectMedicamentoScreen extends StatefulWidget {
   final Paciente paciente;
 
-  const SelectMedicamentoScreen({Key? key, required this.paciente})
-    : super(key: key);
+  const SelectMedicamentoScreen({super.key, required this.paciente});
 
   @override
   State<SelectMedicamentoScreen> createState() =>
@@ -111,10 +110,8 @@ class _SelectMedicamentoScreenState extends State<SelectMedicamentoScreen> {
       title: Text(title),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: () {
-        // Cierra el modal de opciones al seleccionar una
         Navigator.pop(context);
 
-        // Lógica de navegación Signos Vitales (JÓVENES)
         if (title == 'Frecuencia Cardíaca') {
           Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const HeartRateScreenJ()),
@@ -141,9 +138,7 @@ class _SelectMedicamentoScreenState extends State<SelectMedicamentoScreen> {
               builder: (context) => const OxygenSaturationScreenJ(),
             ),
           );
-        }
-        // Lógica de navegación PAM (JÓVENES)
-        else if (title == 'Presión Arterial Mujeres') {
+        } else if (title == 'Presión Arterial Mujeres') {
           Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => const PresionArterialMujeresScreenJ(),
@@ -170,7 +165,6 @@ class _SelectMedicamentoScreenState extends State<SelectMedicamentoScreen> {
         .toList();
   }
 
-  // Tu función _groupAndSortMedicamentos (reubicada)
   Map<String, List<Medicamento>> _groupAndSortMedicamentos(
     List<Medicamento> medicamentos,
   ) {
@@ -189,7 +183,6 @@ class _SelectMedicamentoScreenState extends State<SelectMedicamentoScreen> {
     );
   }
 
-  // Tu función _getFilteredMedicamentosForSearch (reubicada)
   List<Medicamento> _getFilteredMedicamentosForSearch() {
     if (_searchText.isEmpty) {
       return [];
@@ -203,7 +196,6 @@ class _SelectMedicamentoScreenState extends State<SelectMedicamentoScreen> {
         .toList();
   }
 
-  // Tu función _formatDosis (reubicada)
   String _formatDosis(double dosis) {
     final roundedDosis = double.parse(dosis.toStringAsFixed(2));
     if (roundedDosis == roundedDosis.toInt()) {
@@ -212,7 +204,6 @@ class _SelectMedicamentoScreenState extends State<SelectMedicamentoScreen> {
     return roundedDosis.toString();
   }
 
-  // Tu función _getDosisDisplay (reubicada)
   String _getDosisDisplay(Medicamento medicamento) {
     final Map<String, dynamic> calculatedDoses = DosisCalculator.calculateDosis(
       widget.paciente,
@@ -240,7 +231,6 @@ class _SelectMedicamentoScreenState extends State<SelectMedicamentoScreen> {
     return display.trim().isEmpty ? 'N/A' : display.trim();
   }
 
-  // Tu función _buildMedicamentoListTile (reubicada)
   Widget _buildMedicamentoListTile(Medicamento medicamento) {
     final String dosisDisplay = _getDosisDisplay(medicamento);
     return Card(

@@ -1,36 +1,26 @@
 import 'package:flutter/material.dart';
 
 class PresionArterialHombresScreenJ extends StatelessWidget {
-  const PresionArterialHombresScreenJ({Key? key}) : super(key: key);
+  const PresionArterialHombresScreenJ({super.key});
 
-  // Definimos estilos y colores
-  static const Color tableHeaderColor = Color.fromARGB(
-    255,
-    0,
-    0,
-    0,
-  ); // Negro/Gris oscuro
+  static const Color tableHeaderColor = Color.fromARGB(255, 0, 0, 0);
   static const TextStyle headerTextStyle = TextStyle(
     fontWeight: FontWeight.bold,
     color: Colors.white,
     fontSize: 12,
   );
   static const TextStyle cellTextStyle = TextStyle(fontSize: 12);
-  static const Color subHeaderColor = Color.fromARGB(
-    255,
-    230,
-    230,
-    230,
-  ); // Gris claro
-
-  // Función para construir una celda de encabezado
+  static const Color subHeaderColor = Color.fromARGB(255, 230, 230, 230);
   DataColumn _buildDataColumn(String label) {
     return DataColumn(
       label: SizedBox(
-        width: 65, // Ancho fijo para manejar el scroll horizontal
+        width: 65,
         child: Text(
           label,
-          style: headerTextStyle.copyWith(color: Colors.black),
+          style: headerTextStyle.copyWith(
+            color: Color.fromARGB(255, 14, 113, 194),
+            fontSize: 14,
+          ),
           textAlign: TextAlign.center,
           maxLines: 2,
         ),
@@ -38,14 +28,13 @@ class PresionArterialHombresScreenJ extends StatelessWidget {
     );
   }
 
-  // Función para construir una celda de datos
   DataCell _buildDataCell(
     String text, [
     FontWeight fontWeight = FontWeight.normal,
   ]) {
     return DataCell(
       SizedBox(
-        width: 65, // Mismo ancho que la columna
+        width: 75,
         child: Text(
           text,
           style: cellTextStyle.copyWith(fontWeight: fontWeight),
@@ -55,7 +44,6 @@ class PresionArterialHombresScreenJ extends StatelessWidget {
     );
   }
 
-  // Helper para construir una fila de datos completa
   DataRow _buildDataRowCells(
     String edad,
     String sDMin,
@@ -83,7 +71,7 @@ class PresionArterialHombresScreenJ extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Presión Arterial Hombres'),
-        backgroundColor: tableHeaderColor,
+        backgroundColor: Color.fromARGB(255, 14, 113, 194),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -91,24 +79,17 @@ class PresionArterialHombresScreenJ extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Presión Arterial de Hombres de 1 Semana a 18 Años de Edad',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: tableHeaderColor,
-              ),
-            ),
-            const SizedBox(height: 15),
-
-            // --- TABLA DE DATOS CON SCROLL HORIZONTAL ---
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingRowHeight: 60, // Aumenta la altura para las etiquetas
+                headingRowHeight: 60,
                 columnSpacing: 10,
-                dataRowHeight: 40,
-                border: TableBorder.all(color: Colors.grey.shade400, width: 1),
+                // ignore: deprecated_member_use
+                dataRowHeight: 75,
+                border: TableBorder.all(
+                  color: const Color.fromARGB(255, 83, 232, 103),
+                  width: 1,
+                ),
 
                 columns: [
                   _buildDataColumn('EDAD'),
@@ -121,7 +102,6 @@ class PresionArterialHombresScreenJ extends StatelessWidget {
                 ],
 
                 rows: [
-                  // Sub-encabezado (simulado con una fila)
                   DataRow(
                     cells: [
                       _buildDataCell('', FontWeight.bold),
@@ -135,46 +115,9 @@ class PresionArterialHombresScreenJ extends StatelessWidget {
                       _buildDataCell('', FontWeight.bold),
                       _buildDataCell('', FontWeight.bold),
                     ],
-                    color: MaterialStateProperty.all(subHeaderColor),
+                    color: WidgetStateProperty.all(subHeaderColor),
                   ),
 
-                  // Datos (1 semana a 18 años)
-                  _buildDataRowCells(
-                    '<7 días',
-                    '63.1 / 42.2',
-                    '72.5 / 51.1',
-                    '82.3 / 60.0',
-                    '49.2',
-                    '58.3',
-                    '67.4',
-                  ),
-                  _buildDataRowCells(
-                    '8-30 días',
-                    '79.9 / 39.1',
-                    '82.0 / 50.3',
-                    '93.1 / 61.5',
-                    '52.7',
-                    '60.9',
-                    '72.1',
-                  ),
-                  _buildDataRowCells(
-                    '1-5 meses',
-                    '81.8 / 36.6',
-                    '93.0 / 47.8',
-                    '105.9 / 59.0',
-                    '51.1',
-                    '62.9',
-                    '74.6',
-                  ),
-                  _buildDataRowCells(
-                    '6-11 meses',
-                    '80.6 / 43.3',
-                    '95.4 / 53.3',
-                    '110.2 / 63.2',
-                    '55.8',
-                    '67.3',
-                    '78.9',
-                  ),
                   _buildDataRowCells(
                     '1 año',
                     '81.4 / 44.0',
@@ -350,10 +293,8 @@ class PresionArterialHombresScreenJ extends StatelessWidget {
               ),
             ),
 
-            // --- FIN DE LA TABLA ---
             const SizedBox(height: 20),
 
-            // --- NOTAS Y FÓRMULAS ---
             const Text(
               'Nota: no se programa el intervalo de tiempo en que se toma la presión arterial media de acuerdo con las condiciones del paciente, de 15 minutos para los casos graves a 24 horas para los estables. Cuando la presión arterial media baje por debajo del nivel mínimo, se debe iniciar la infusión de cristaloides, según el protocolo. Cuando la presión arterial media tiende a elevarse por encima de la máxima normal, hay que suspender la infusión de líquidos para evitar la sobrecarga de volumen.',
               style: cellTextStyle,

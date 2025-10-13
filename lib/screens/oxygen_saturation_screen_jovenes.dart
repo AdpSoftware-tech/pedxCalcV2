@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 
 class OxygenSaturationScreenJ extends StatelessWidget {
-  const OxygenSaturationScreenJ({Key? key}) : super(key: key);
+  const OxygenSaturationScreenJ({super.key});
 
-  // Definimos estilos y colores
-  static const Color infoBoxColor = Color.fromARGB(
-    255,
-    100,
-    149,
-    237,
-  ); // Azul claro para el encabezado/fondo
+  static const Color infoBoxColor = Color.fromARGB(255, 100, 149, 237);
   static const TextStyle headerTextStyle = TextStyle(
     fontWeight: FontWeight.bold,
     color: Colors.white,
@@ -17,7 +11,6 @@ class OxygenSaturationScreenJ extends StatelessWidget {
   );
   static const TextStyle bodyTextStyle = TextStyle(fontSize: 16, height: 1.5);
 
-  // Estilo en negrita corregido para usar como constante en TextSpan
   static const TextStyle boldBodyTextStyle = TextStyle(
     fontSize: 16,
     height: 1.5,
@@ -28,7 +21,7 @@ class OxygenSaturationScreenJ extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Oxygen Saturation (SpO₂)'),
+        title: const Text('Saturación de oxígeno (SpO₂)'),
         backgroundColor: infoBoxColor,
       ),
       body: SingleChildScrollView(
@@ -36,7 +29,6 @@ class OxygenSaturationScreenJ extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // --- ENCABEZADO DE INFORMACIÓN ---
             Container(
               padding: const EdgeInsets.symmetric(
                 vertical: 12.0,
@@ -50,13 +42,12 @@ class OxygenSaturationScreenJ extends StatelessWidget {
                 ),
               ),
               child: const Text(
-                'Oxygen Saturation (SpO₂)',
+                'Saturación de oxígeno (SpO₂)',
                 style: headerTextStyle,
                 textAlign: TextAlign.center,
               ),
             ),
 
-            // --- CUERPO DE LA INFORMACIÓN ---
             Container(
               padding: const EdgeInsets.all(20.0),
               decoration: BoxDecoration(
@@ -81,19 +72,16 @@ class OxygenSaturationScreenJ extends StatelessWidget {
                       text: 'Más allá de este período, una SpO₂ de ',
                       style: bodyTextStyle,
                     ),
-                    TextSpan(
-                      text: '<90-92%',
-                      style: boldBodyTextStyle, // USANDO LA CONSTANTE CORREGIDA
-                    ),
+                    TextSpan(text: '<90-92%', style: boldBodyTextStyle),
                     TextSpan(text: ' puede sugerir una ', style: bodyTextStyle),
                     TextSpan(
                       text: 'condición respiratoria',
-                      style: boldBodyTextStyle, // USANDO LA CONSTANTE CORREGIDA
+                      style: boldBodyTextStyle,
                     ),
                     TextSpan(text: ' o ', style: bodyTextStyle),
                     TextSpan(
                       text: 'cardiopatía cianótica.',
-                      style: boldBodyTextStyle, // USANDO LA CONSTANTE CORREGIDA
+                      style: boldBodyTextStyle,
                     ),
                   ],
                 ),

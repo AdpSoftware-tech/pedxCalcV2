@@ -1,36 +1,26 @@
 import 'package:flutter/material.dart';
 
 class PresionArterialMujeresScreenJ extends StatelessWidget {
-  const PresionArterialMujeresScreenJ({Key? key}) : super(key: key);
+  const PresionArterialMujeresScreenJ({super.key});
 
-  // Definimos estilos y colores
-  static const Color tableHeaderColor = Color.fromARGB(
-    255,
-    0,
-    0,
-    0,
-  ); // Negro/Gris oscuro
+  static const Color tableHeaderColor = Color.fromARGB(255, 0, 0, 0);
   static const TextStyle headerTextStyle = TextStyle(
     fontWeight: FontWeight.bold,
     color: Colors.white,
     fontSize: 12,
   );
   static const TextStyle cellTextStyle = TextStyle(fontSize: 12);
-  static const Color subHeaderColor = Color.fromARGB(
-    255,
-    230,
-    230,
-    230,
-  ); // Gris claro
-
-  // Función para construir una celda de encabezado
+  static const Color subHeaderColor = Color.fromARGB(255, 230, 230, 230);
   DataColumn _buildDataColumn(String label) {
     return DataColumn(
       label: SizedBox(
-        width: 65, // Ancho fijo para manejar el scroll horizontal
+        width: 65,
         child: Text(
           label,
-          style: headerTextStyle.copyWith(color: Colors.black),
+          style: headerTextStyle.copyWith(
+            color: Color.fromARGB(255, 14, 113, 194),
+            fontSize: 14,
+          ),
           textAlign: TextAlign.center,
           maxLines: 2,
         ),
@@ -38,14 +28,13 @@ class PresionArterialMujeresScreenJ extends StatelessWidget {
     );
   }
 
-  // Función para construir una celda de datos
   DataCell _buildDataCell(
     String text, [
     FontWeight fontWeight = FontWeight.normal,
   ]) {
     return DataCell(
       SizedBox(
-        width: 65, // Mismo ancho que la columna
+        width: 75,
         child: Text(
           text,
           style: cellTextStyle.copyWith(fontWeight: fontWeight),
@@ -60,7 +49,7 @@ class PresionArterialMujeresScreenJ extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Presión Arterial Mujeres'),
-        backgroundColor: tableHeaderColor,
+        backgroundColor: Color.fromARGB(255, 14, 113, 194),
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
@@ -68,24 +57,17 @@ class PresionArterialMujeresScreenJ extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Presión Arterial de Mujeres de 1 Semana a 18 Años de Edad',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: tableHeaderColor,
-              ),
-            ),
-            const SizedBox(height: 15),
-
-            // --- TABLA DE DATOS CON SCROLL HORIZONTAL ---
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingRowHeight: 60, // Aumenta la altura para las etiquetas
+                headingRowHeight: 60,
                 columnSpacing: 10,
-                dataRowHeight: 40,
-                border: TableBorder.all(color: Colors.grey.shade400, width: 1),
+                // ignore: deprecated_member_use
+                dataRowHeight: 75,
+                border: TableBorder.all(
+                  color: const Color.fromARGB(255, 83, 232, 103),
+                  width: 1,
+                ),
 
                 columns: [
                   _buildDataColumn('EDAD'),
@@ -98,7 +80,6 @@ class PresionArterialMujeresScreenJ extends StatelessWidget {
                 ],
 
                 rows: [
-                  // Sub-encabezado (simulado con una fila)
                   DataRow(
                     cells: [
                       _buildDataCell('', FontWeight.bold),
@@ -112,46 +93,9 @@ class PresionArterialMujeresScreenJ extends StatelessWidget {
                       _buildDataCell('', FontWeight.bold),
                       _buildDataCell('', FontWeight.bold),
                     ],
-                    color: MaterialStateProperty.all(subHeaderColor),
+                    color: WidgetStateProperty.all(subHeaderColor),
                   ),
 
-                  // Datos (1 semana a 18 años)
-                  _buildDataRowCells(
-                    '<7 días',
-                    '62.5 / 42.1',
-                    '71.8 / 50.5',
-                    '81.1 / 58.9',
-                    '48.9',
-                    '57.6',
-                    '66.3',
-                  ),
-                  _buildDataRowCells(
-                    '8-30 días',
-                    '69.7 / 39.2',
-                    '81.7 / 50.7',
-                    '93.7 / 62.2',
-                    '49.4',
-                    '61.1',
-                    '72.7',
-                  ),
-                  _buildDataRowCells(
-                    '1-5 meses',
-                    '79.8 / 38.9',
-                    '92.0 / 49.5',
-                    '104.2 / 60.1',
-                    '52.5',
-                    '63.7',
-                    '74.8',
-                  ),
-                  _buildDataRowCells(
-                    '6-11 meses',
-                    '79.9 / 42.9',
-                    '94.5 / 52.5',
-                    '109.1 / 62.1',
-                    '55.2',
-                    '66.5',
-                    '77.8',
-                  ),
                   _buildDataRowCells(
                     '1 año',
                     '80.2 / 43.2',
@@ -327,10 +271,8 @@ class PresionArterialMujeresScreenJ extends StatelessWidget {
               ),
             ),
 
-            // --- FIN DE LA TABLA ---
             const SizedBox(height: 20),
 
-            // --- FÓRMULAS ---
             const Text(
               'Fórmulas de Presión Arterial',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
