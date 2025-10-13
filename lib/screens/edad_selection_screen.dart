@@ -12,30 +12,27 @@ class EdadSelectionScreen extends StatefulWidget {
 class _EdadSelectionScreenState extends State<EdadSelectionScreen> {
   @override
   Widget build(BuildContext context) {
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Seleccionar tipo de edad'),
-          automaticallyImplyLeading:
-              false, // <-- ESTA LÍNEA QUITA LA FLECHA DE RETROCESO
+          automaticallyImplyLeading: false,
         ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Botón para "Anotar la Edad actual del paciente en años (mayores de 1 año)"
               SizedBox(
-                width:
-                    300, // Ancho fijo para los botones, ajusta según necesites
+                width: 300,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const PacienteDataScreen(
-                          isEdadAniosMode: true,
-                        ), // Pasamos un flag para indicar el modo
+                        builder: (context) =>
+                            const PacienteDataScreen(isEdadAniosMode: true),
                       ),
                     );
                   },
