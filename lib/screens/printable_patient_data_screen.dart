@@ -1,5 +1,3 @@
-// lib/screens/printable_patient_data_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -141,7 +139,7 @@ class PrintablePatientDataScreen extends StatelessWidget {
                   ),
                   pw.Divider(
                     color: PdfColors.blueGrey100,
-                    height: 8,
+                    height: 10,
                     thickness: 0.8,
                   ),
                   // ignore: deprecated_member_use
@@ -153,14 +151,16 @@ class PrintablePatientDataScreen extends StatelessWidget {
                     ),
                     headerStyle: pw.TextStyle(
                       fontWeight: pw.FontWeight.bold,
-                      fontSize: 7,
+                      fontSize: 10, //tamanio de los nombres
                       color: PdfColors.white,
                     ),
                     headerDecoration: const pw.BoxDecoration(
                       color: PdfColors.blue600,
                     ),
                     cellAlignment: pw.Alignment.centerLeft,
-                    cellStyle: const pw.TextStyle(fontSize: 6),
+                    cellStyle: const pw.TextStyle(
+                      fontSize: 8,
+                    ), //tamanio de lo que esta dentro de la tabla
 
                     headers: [
                       'Medicamento',
