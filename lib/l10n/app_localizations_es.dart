@@ -147,26 +147,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ageSelectTitle => 'Seleccionar tipo de edad';
 
   @override
-  String get ageSelectQuestion => '¿Cómo deseas ingresar la edad?';
+  String get ageSelectQuestion => '¿Cual es el rango de edad del paciente?';
 
   @override
-  String get ageYearsTitle => 'Edad en Años';
+  String get ageYearsTitle => 'Mayor a 1 año';
 
   @override
-  String get ageYearsSubtitle => 'Para pacientes de 1 hasta 14 años';
+  String get ageYearsSubtitle =>
+      'Edad en años para pacientes de 1 hasta 14 años';
 
   @override
   String get ageSelectNote =>
-      'Si no tienes el peso, en las siguientes pantallas podrás estimarlo usando la edad.';
+      'Sino tienes el peso se puede estimar usando solo la edad.';
 
   @override
   String get commonBadge => 'Más común';
 
   @override
-  String get ageMonthsTitle => 'Edad en Meses';
+  String get ageMonthsTitle => 'Menor a 1 año';
 
   @override
-  String get ageMonthsSubtitle => 'Para lactantes de 1 a 11 meses';
+  String get ageMonthsSubtitle =>
+      'Edad en meses para lactantes de 1 a 11 meses';
 
   @override
   String get ageSelectSubtitle =>

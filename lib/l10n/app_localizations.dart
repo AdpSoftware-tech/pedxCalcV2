@@ -347,25 +347,25 @@ abstract class AppLocalizations {
   /// No description provided for @ageSelectQuestion.
   ///
   /// In es, this message translates to:
-  /// **'¿Cómo deseas ingresar la edad?'**
+  /// **'¿Cual es el rango de edad del paciente?'**
   String get ageSelectQuestion;
 
   /// No description provided for @ageYearsTitle.
   ///
   /// In es, this message translates to:
-  /// **'Edad en Años'**
+  /// **'Mayor a 1 año'**
   String get ageYearsTitle;
 
   /// No description provided for @ageYearsSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Para pacientes de 1 hasta 14 años'**
+  /// **'Edad en años para pacientes de 1 hasta 14 años'**
   String get ageYearsSubtitle;
 
   /// No description provided for @ageSelectNote.
   ///
   /// In es, this message translates to:
-  /// **'Si no tienes el peso, en las siguientes pantallas podrás estimarlo usando la edad.'**
+  /// **'Sino tienes el peso se puede estimar usando solo la edad.'**
   String get ageSelectNote;
 
   /// No description provided for @commonBadge.
@@ -377,13 +377,13 @@ abstract class AppLocalizations {
   /// No description provided for @ageMonthsTitle.
   ///
   /// In es, this message translates to:
-  /// **'Edad en Meses'**
+  /// **'Menor a 1 año'**
   String get ageMonthsTitle;
 
   /// No description provided for @ageMonthsSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Para lactantes de 1 a 11 meses'**
+  /// **'Edad en meses para lactantes de 1 a 11 meses'**
   String get ageMonthsSubtitle;
 
   /// No description provided for @ageSelectSubtitle.

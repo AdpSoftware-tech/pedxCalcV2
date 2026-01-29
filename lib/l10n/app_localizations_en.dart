@@ -146,26 +146,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ageSelectTitle => 'Select age type';
 
   @override
-  String get ageSelectQuestion => 'How do you want to enter the age?';
+  String get ageSelectQuestion => 'What is the patient’s age range?';
 
   @override
-  String get ageYearsTitle => 'Age in Years';
+  String get ageYearsTitle => 'Over 1 year of age';
 
   @override
-  String get ageYearsSubtitle => 'For patients from 1 to 14 years old';
+  String get ageYearsSubtitle =>
+      'Age in years for patients from 1 to 14 years old';
 
   @override
   String get ageSelectNote =>
-      'If you don’t have the weight, the next screens can estimate it using age.';
+      'If the weight is not available, it can be estimated using age only';
 
   @override
   String get commonBadge => 'Most common';
 
   @override
-  String get ageMonthsTitle => 'Age in Months';
+  String get ageMonthsTitle => 'Under 1 year of age';
 
   @override
-  String get ageMonthsSubtitle => 'For infants from 1 to 11 months old';
+  String get ageMonthsSubtitle =>
+      'Age in months for infants from 1 to 11 months old';
 
   @override
   String get ageSelectSubtitle =>

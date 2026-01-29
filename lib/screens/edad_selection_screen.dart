@@ -35,6 +35,35 @@ class _EdadSelectionScreenState extends State<EdadSelectionScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEAF3FF),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppUI.primaryBlue.withAlpha(
+                            (0.20 * 255).round(),
+                          ), // ✅
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: AppUI.primaryBlue,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              t.ageSelectNote, // ✅
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                     Text(
                       t.ageSelectQuestion, // ✅
                       textAlign: TextAlign.center,
@@ -55,7 +84,7 @@ class _EdadSelectionScreenState extends State<EdadSelectionScreen> {
                     const SizedBox(height: 28),
 
                     _OptionCard(
-                      icon: Icons.child_care,
+                      icon: Icons.person,
                       title: t.ageYearsTitle, // ✅
                       subtitle: t.ageYearsSubtitle, // ✅
                       badgeText: t.commonBadge, // ✅
@@ -87,35 +116,6 @@ class _EdadSelectionScreenState extends State<EdadSelectionScreen> {
                     ),
 
                     const SizedBox(height: 24),
-
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEAF3FF),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppUI.primaryBlue.withAlpha(
-                            (0.20 * 255).round(),
-                          ), // ✅
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.info_outline,
-                            color: AppUI.primaryBlue,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              t.ageSelectNote, // ✅
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
