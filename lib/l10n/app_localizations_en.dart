@@ -31,7 +31,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickSummaryBody =>
-      '• Real weight is recommended when available.\n• If no weight is available, the app estimates weight by age automatically.\n• Always verify doses with your local protocol/guideline before administering.';
+      '• It is recommended to enter the weight if it is available.\n• If the weight is unknown, Pedx automatically estimates the weight based on age.\n• Always verify doses with your local protocol/guideline before administering.\n• These calculations apply to patients aged 1 month to 18 years.';
 
   @override
   String get termsAccept => 'I have read and accept the terms and conditions.';
@@ -40,62 +40,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get btnContinue => 'Continue';
 
   @override
-  String get accordion1Title => '1. Table content';
+  String get accordion1Title => '1. Application Content';
 
   @override
   String get accordion1Body =>
       'This table contains information about commonly used emergency medications.';
 
   @override
-  String get accordion2Title => '2. Applicability to children';
-
-  @override
-  String get accordion2Body => 'Applicable to children older than one month.';
-
-  @override
-  String get accordion3Title => '3. Weight/Age determination';
+  String get accordion3Title => '2. Weight/Age determination';
 
   @override
   String get accordion3Body =>
       'Enter weight in kilograms when available (recommended). If you don\'t know the weight, enter age (years or months as applicable) and the app will estimate weight automatically. The screen will show whether “Real weight ✅” or “Estimated ⚠️” is used.';
 
   @override
-  String get accordion4Title => '4. Maintenance solution volume';
+  String get accordion4Title => '3. Maintenance solution volume';
 
   @override
   String get accordion4Body =>
       'For maintenance fluids, you may adjust the percentage of requirements used for the solution.';
 
   @override
-  String get accordion5Title => '5. Automatic calculations';
+  String get accordion5Title => '4. Automatic calculations';
 
   @override
   String get accordion5Body =>
-      'All doses are calculated automatically using real or estimated weight (if applicable), plus other clinical variables depending on the medication.';
+      '• All doses are calculated automatically using real or estimated weight (if applicable), plus other clinical variables depending on the medication.\n• When a dose has a range, the app shows a suggested value. Verify range and formula according to your local protocol.';
 
   @override
-  String get accordion6Title => '6. Range verification';
-
-  @override
-  String get accordion6Body =>
-      'When a dose has a range, the app shows a suggested value. Verify range and formula according to your local protocol.';
-
-  @override
-  String get accordion7Title => '7. Alternative dose calculations';
+  String get accordion7Title => '5. Alternative dose calculations';
 
   @override
   String get accordion7Body =>
-      'If you need a different dose than the proposed one, calculate it manually, since this table/app is not editable.';
+      'Any required dose adjustment must be performed manually, as this application does not support dose modification.';
 
   @override
-  String get accordion8Title => '8. CAF size calculation (XS, S, etc.)';
+  String get accordion8Title => '6. CAF size calculation (XS, S, etc.)';
 
   @override
   String get accordion8Body =>
-      'CAF size is suggested based on patient weight. If there is no suitable recommendation, the field may be blank.';
+      'CAF size is suggested based on patient weight. If there is no suitable recommendation.';
 
   @override
-  String get accordion9Title => '9. User responsibility';
+  String get accordion9Title => '7. User responsibility';
 
   @override
   String get accordion9Body =>

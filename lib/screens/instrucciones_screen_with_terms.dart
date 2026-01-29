@@ -85,7 +85,14 @@ class _InstruccionesScreenWithTermsState
       title: Text(t.termsTitle),
       actions: [
         PopupMenuButton<_TermsMenu>(
-          icon: const Icon(Icons.more_vert),
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha((0.15 * 255).round()),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.settings, size: 22),
+          ),
           onSelected: (value) {
             switch (value) {
               case _TermsMenu.about:
@@ -170,10 +177,7 @@ class _InstruccionesScreenWithTermsState
                         title: t.accordion1Title,
                         content: t.accordion1Body,
                       ),
-                      InstructionAccordion(
-                        title: t.accordion2Title,
-                        content: t.accordion2Body,
-                      ),
+
                       InstructionAccordion(
                         title: t.accordion3Title,
                         content: t.accordion3Body,
@@ -185,10 +189,6 @@ class _InstruccionesScreenWithTermsState
                       InstructionAccordion(
                         title: t.accordion5Title,
                         content: t.accordion5Body,
-                      ),
-                      InstructionAccordion(
-                        title: t.accordion6Title,
-                        content: t.accordion6Body,
                       ),
                       InstructionAccordion(
                         title: t.accordion7Title,

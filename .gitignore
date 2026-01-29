@@ -43,3 +43,28 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# iOS / Xcode
+ios/Pods/
+ios/.symlinks/
+ios/DerivedData/
+ios/Flutter/ephemeral/
+ios/Flutter/Flutter.framework
+ios/Flutter/App.framework
+ios/Flutter/Generated.xcconfig
+ios/Runner.xcworkspace/
+# Desktop
+macos/Pods/
+linux/build/
+windows/build/
+# Environment / secrets
+.env
+.env.*
+secrets.dart
+config/private/
+# Coverage & tests
+coverage/
+
+# Temporary files
+*.tmp
+*.bak

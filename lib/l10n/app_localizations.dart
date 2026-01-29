@@ -143,7 +143,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickSummaryBody.
   ///
   /// In es, this message translates to:
-  /// **'• Peso real es recomendado si está disponible.\n• Si no hay peso, la app estima el peso por edad automáticamente.\n• Verifica siempre las dosis con protocolo/guía local antes de administrar.'**
+  /// **'• Se recomienda poner el peso si está disponible.\n• Si se desconoce el peso Pedx estima el peso según la edad de forma automática.\n• Verifica siempre las dosis con protocolo/guía local antes de administrar.\n• Estos cálculos son aplicables para la población de 1 mes a 18 años.'**
   String get quickSummaryBody;
 
   /// No description provided for @termsAccept.
@@ -161,7 +161,7 @@ abstract class AppLocalizations {
   /// No description provided for @accordion1Title.
   ///
   /// In es, this message translates to:
-  /// **'1. Contenido de la tabla'**
+  /// **'1. Contenido de la aplicación'**
   String get accordion1Title;
 
   /// No description provided for @accordion1Body.
@@ -170,22 +170,10 @@ abstract class AppLocalizations {
   /// **'La siguiente tabla contiene información sobre medicación de más frecuente uso en emergencias.'**
   String get accordion1Body;
 
-  /// No description provided for @accordion2Title.
-  ///
-  /// In es, this message translates to:
-  /// **'2. Aplicabilidad a niños'**
-  String get accordion2Title;
-
-  /// No description provided for @accordion2Body.
-  ///
-  /// In es, this message translates to:
-  /// **'Es aplicable a niños mayores a un mes de edad.'**
-  String get accordion2Body;
-
   /// No description provided for @accordion3Title.
   ///
   /// In es, this message translates to:
-  /// **'3. Determinación de Peso/Edad'**
+  /// **'2. Determinación de Peso/Edad'**
   String get accordion3Title;
 
   /// No description provided for @accordion3Body.
@@ -197,7 +185,7 @@ abstract class AppLocalizations {
   /// No description provided for @accordion4Title.
   ///
   /// In es, this message translates to:
-  /// **'4. Volumen de las soluciones de mantenimiento'**
+  /// **'3. Volumen de las soluciones de mantenimiento'**
   String get accordion4Title;
 
   /// No description provided for @accordion4Body.
@@ -209,55 +197,43 @@ abstract class AppLocalizations {
   /// No description provided for @accordion5Title.
   ///
   /// In es, this message translates to:
-  /// **'5. Cálculos automáticos'**
+  /// **'4. Cálculos automáticos'**
   String get accordion5Title;
 
   /// No description provided for @accordion5Body.
   ///
   /// In es, this message translates to:
-  /// **'Todas las dosis se calculan automáticamente con el peso real o el peso estimado (si aplica), además de otras variables clínicas según el medicamento.'**
+  /// **'• Todas las dosis se calculan automáticamente con el peso real o el peso estimado (si aplica), además de otras variables clínicas según el medicamento.\n• Cuando una dosis tiene rango, la app muestra un valor sugerido. Verifica el rango y la fórmula del medicamento según el protocolo local.'**
   String get accordion5Body;
-
-  /// No description provided for @accordion6Title.
-  ///
-  /// In es, this message translates to:
-  /// **'6. Verificación de rangos'**
-  String get accordion6Title;
-
-  /// No description provided for @accordion6Body.
-  ///
-  /// In es, this message translates to:
-  /// **'Cuando una dosis tiene rango, la app muestra un valor sugerido. Verifica el rango y la fórmula del medicamento según el protocolo local.'**
-  String get accordion6Body;
 
   /// No description provided for @accordion7Title.
   ///
   /// In es, this message translates to:
-  /// **'7. Requerimientos de cálculo de dosis diferentes'**
+  /// **'5. Requerimientos de cálculo de dosis diferentes'**
   String get accordion7Title;
 
   /// No description provided for @accordion7Body.
   ///
   /// In es, this message translates to:
-  /// **'Si necesitas calcular una dosis distinta a la propuesta, debe realizarse manualmente, ya que esta tabla/app no es modificable.'**
+  /// **'Cualquier ajuste de dosis necesario debe realizarse manualmente, ya que esta aplicación no admite la modificación de dosis.'**
   String get accordion7Body;
 
   /// No description provided for @accordion8Title.
   ///
   /// In es, this message translates to:
-  /// **'8. Cálculo del tamaño del CAF (XS, S, etc.)'**
+  /// **'6. Cálculo del tamaño del CAF (XS, S, etc.)'**
   String get accordion8Title;
 
   /// No description provided for @accordion8Body.
   ///
   /// In es, this message translates to:
-  /// **'El tamaño sugerido del CAF se calcula según el peso del paciente. Si no hay una recomendación adecuada para ese paciente, el espacio puede quedar en blanco.'**
+  /// **'El tamaño sugerido del CAF se calcula según el peso del paciente. Si no hay una recomendación adecuada para ese paciente.'**
   String get accordion8Body;
 
   /// No description provided for @accordion9Title.
   ///
   /// In es, this message translates to:
-  /// **'9. Responsabilidad del Usuario'**
+  /// **'7. Responsabilidad del Usuario'**
   String get accordion9Title;
 
   /// No description provided for @accordion9Body.

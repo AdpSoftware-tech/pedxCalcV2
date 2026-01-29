@@ -31,7 +31,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get quickSummaryBody =>
-      '• Peso real es recomendado si está disponible.\n• Si no hay peso, la app estima el peso por edad automáticamente.\n• Verifica siempre las dosis con protocolo/guía local antes de administrar.';
+      '• Se recomienda poner el peso si está disponible.\n• Si se desconoce el peso Pedx estima el peso según la edad de forma automática.\n• Verifica siempre las dosis con protocolo/guía local antes de administrar.\n• Estos cálculos son aplicables para la población de 1 mes a 18 años.';
 
   @override
   String get termsAccept => 'He leído y acepto los términos y condiciones.';
@@ -40,63 +40,50 @@ class AppLocalizationsEs extends AppLocalizations {
   String get btnContinue => 'Continuar';
 
   @override
-  String get accordion1Title => '1. Contenido de la tabla';
+  String get accordion1Title => '1. Contenido de la aplicación';
 
   @override
   String get accordion1Body =>
       'La siguiente tabla contiene información sobre medicación de más frecuente uso en emergencias.';
 
   @override
-  String get accordion2Title => '2. Aplicabilidad a niños';
-
-  @override
-  String get accordion2Body => 'Es aplicable a niños mayores a un mes de edad.';
-
-  @override
-  String get accordion3Title => '3. Determinación de Peso/Edad';
+  String get accordion3Title => '2. Determinación de Peso/Edad';
 
   @override
   String get accordion3Body =>
       'Ingresa el peso en kilogramos cuando esté disponible (recomendado). Si no conoces el peso, ingresa la edad (años o meses según corresponda) y la app calculará un peso estimado automáticamente para realizar los cálculos. La pantalla mostrará si se usará “Peso real ✅” o “Estimado ⚠️”.';
 
   @override
-  String get accordion4Title => '4. Volumen de las soluciones de mantenimiento';
+  String get accordion4Title => '3. Volumen de las soluciones de mantenimiento';
 
   @override
   String get accordion4Body =>
       'En el cálculo del volumen de las soluciones de mantenimiento se puede variar el porcentaje de requerimientos al cual se desea la solución.';
 
   @override
-  String get accordion5Title => '5. Cálculos automáticos';
+  String get accordion5Title => '4. Cálculos automáticos';
 
   @override
   String get accordion5Body =>
-      'Todas las dosis se calculan automáticamente con el peso real o el peso estimado (si aplica), además de otras variables clínicas según el medicamento.';
-
-  @override
-  String get accordion6Title => '6. Verificación de rangos';
-
-  @override
-  String get accordion6Body =>
-      'Cuando una dosis tiene rango, la app muestra un valor sugerido. Verifica el rango y la fórmula del medicamento según el protocolo local.';
+      '• Todas las dosis se calculan automáticamente con el peso real o el peso estimado (si aplica), además de otras variables clínicas según el medicamento.\n• Cuando una dosis tiene rango, la app muestra un valor sugerido. Verifica el rango y la fórmula del medicamento según el protocolo local.';
 
   @override
   String get accordion7Title =>
-      '7. Requerimientos de cálculo de dosis diferentes';
+      '5. Requerimientos de cálculo de dosis diferentes';
 
   @override
   String get accordion7Body =>
-      'Si necesitas calcular una dosis distinta a la propuesta, debe realizarse manualmente, ya que esta tabla/app no es modificable.';
+      'Cualquier ajuste de dosis necesario debe realizarse manualmente, ya que esta aplicación no admite la modificación de dosis.';
 
   @override
-  String get accordion8Title => '8. Cálculo del tamaño del CAF (XS, S, etc.)';
+  String get accordion8Title => '6. Cálculo del tamaño del CAF (XS, S, etc.)';
 
   @override
   String get accordion8Body =>
-      'El tamaño sugerido del CAF se calcula según el peso del paciente. Si no hay una recomendación adecuada para ese paciente, el espacio puede quedar en blanco.';
+      'El tamaño sugerido del CAF se calcula según el peso del paciente. Si no hay una recomendación adecuada para ese paciente.';
 
   @override
-  String get accordion9Title => '9. Responsabilidad del Usuario';
+  String get accordion9Title => '7. Responsabilidad del Usuario';
 
   @override
   String get accordion9Body =>
