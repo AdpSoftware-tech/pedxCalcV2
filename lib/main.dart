@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:mi_app/screens/splash_screen.dart';
+import 'package:mi_app/screens/onboarding_screen.dart';
 
 // Si usas flutter gen-l10n (lo normal)
 import 'package:mi_app/l10n/app_localizations.dart';
@@ -40,26 +40,18 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Pedx Calc',
           debugShowCheckedModeBanner: false,
-
-          // ✅ Usa el controlador si existe, si no: inglés por defecto
           locale: currentLocale ?? const Locale('en'),
-
-          // ✅ Idiomas soportados
           supportedLocales: const [Locale('en'), Locale('es')],
-
-          // ✅ Delegates de localización
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: colorScheme,
             scaffoldBackgroundColor: colorScheme.surface,
-
             appBarTheme: AppBarTheme(
               backgroundColor: colorScheme.primary,
               foregroundColor: Colors.white,
@@ -71,7 +63,6 @@ class MyApp extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-
             textTheme: const TextTheme(
               headlineLarge: TextStyle(
                 fontSize: 28,
@@ -89,7 +80,6 @@ class MyApp extends StatelessWidget {
                 color: Color(0xFF666666),
               ),
             ),
-
             cardTheme: CardThemeData(
               elevation: 1,
               color: Colors.white,
@@ -97,7 +87,6 @@ class MyApp extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
               fillColor: Colors.white,
@@ -125,7 +114,6 @@ class MyApp extends StatelessWidget {
                 ),
               ),
             ),
-
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
                 elevation: 0,
@@ -147,7 +135,8 @@ class MyApp extends StatelessWidget {
             ),
           ),
 
-          home: const SplashScreen(),
+          // Arranca directamente en Instrucciones
+          home: const OnboardingScreen(),
         );
       },
     );

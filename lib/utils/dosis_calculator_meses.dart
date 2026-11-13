@@ -3,6 +3,8 @@ import 'package:mi_app/models/medicamento.dart';
 import 'package:mi_app/models/paciente.dart';
 import 'dart:math';
 
+import 'calc_messages.dart';
+
 class DosisCalculatorMeses {
   static Map<String, dynamic> calculateSodioDosis(
     Paciente paciente,
@@ -11,7 +13,7 @@ class DosisCalculatorMeses {
     if (sodioValor <= 0) {
       return {
         'calculosodio': 0.0,
-        'deficit_display': 'Ingrese valor de Sodio',
+        'deficit_display': CalcMsg.needSodium,
         'volumen_display': 'N/A',
         'velocidad_display': 'N/A',
         'con_sf_display': 'N/A',
@@ -19,9 +21,20 @@ class DosisCalculatorMeses {
     }
 
     final double peso = paciente.pesoKg;
-    final double sodioAjustado = sodioValor > 130 ? 130 : sodioValor;
+    if (sodioValor >= 130) {
+      return {
+        'calculosodio': 0.0,
+        'deficit_display': CalcMsg.noSodiumDeficit,
+        'volumen_display': 'N/A',
+        'velocidad_display': 'N/A',
+        'con_sf_display': 'N/A',
+      };
+    }
+    final double sodioAjustado = sodioValor;
 
-    final double deficitSodio = ((125 - sodioAjustado) * peso * 0.6) / 4;
+    // Objetivo 130 mEq/L, igual que la tabla Excel "para APP" (celda C136).
+    // (Na ≥ 130 ya retorna arriba "sin déficit", así que nunca es negativo.)
+    final double deficitSodio = ((130 - sodioAjustado) * peso * 0.6) / 4;
     final double deficitSodioRedondeado = _roundDouble(deficitSodio, 2);
 
     final double volumenSG5 = deficitSodio * 7;
@@ -34,11 +47,10 @@ class DosisCalculatorMeses {
     final double conSFRedondeado = _roundDouble(conSF, 0);
 
     return {
-      'deficit_display': 'Déficit: ${formatDosis(deficitSodioRedondeado)} mL',
-      'volumen_display': 'Volumen: ${formatDosis(volumenSG5Redondeado)} mL',
-      'velocidad_display':
-          'Velocidad: ${formatDosis(velocidadRedondeada)} mL/h',
-      'con_sf_display': 'Con SF: ${formatDosis(conSFRedondeado)} mL',
+      'deficit_display': '${formatDosis(deficitSodioRedondeado)} mL',
+      'volumen_display': '${formatDosis(volumenSG5Redondeado)} mL',
+      'velocidad_display': '${formatDosis(velocidadRedondeada)} mL/h',
+      'con_sf_display': '${formatDosis(conSFRedondeado)} mL',
     };
   }
 
@@ -49,13 +61,21 @@ class DosisCalculatorMeses {
     if (hco3Valor <= 0) {
       return {
         'calculohco3': 0.0,
-        'deficit_display': 'Ingrese valor de HCO3',
+        'deficit_display': CalcMsg.needHco3,
         'volumen_display': 'N/A',
         'velocidad_display': 'N/A',
       };
     }
 
-    final double hco3Ajustado = hco3Valor > 15 ? 15 : hco3Valor;
+    if (hco3Valor >= 15) {
+      return {
+        'calculohco3': 0.0,
+        'deficit_display': CalcMsg.noHco3Deficit,
+        'volumen_display': 'N/A',
+        'velocidad_display': 'N/A',
+      };
+    }
+    final double hco3Ajustado = hco3Valor;
 
     final double deficit = (15 - hco3Ajustado) * paciente.pesoKg * 0.5;
 
@@ -66,9 +86,9 @@ class DosisCalculatorMeses {
 
     return {
       'calculohco3': deficit,
-      'deficit_display': 'Déficit: ${formatDosis(deficit)} mL',
-      'volumen_display': 'Volumen: ${formatDosis(volumen)} mL',
-      'velocidad_display': 'Velocidad: $velocidadRedondeada mL/h',
+      'deficit_display': '${formatDosis(deficit)} mL',
+      'volumen_display': '${formatDosis(volumen)} mL',
+      'velocidad_display': '$velocidadRedondeada mL/h',
     };
   }
 
@@ -119,7 +139,9 @@ class DosisCalculatorMeses {
   }
 
   static String _calculateCatheterSize(int edadMeses) {
-    if (edadMeses >= 1 && edadMeses <= 12) {
+    // edadMeses == 0 → edad no ingresada; esta calculadora es solo para
+    // menores de 1 año, así que el tamaño sigue siendo el de lactante.
+    if (edadMeses >= 0 && edadMeses <= 12) {
       return '4F';
     }
     return 'N/A';
@@ -162,11 +184,14 @@ class DosisCalculatorMeses {
     } else if (medicamento.nombre == 'Prednisona') {
       dosisMg = (peso * 1);
     } else if (medicamento.nombre == 'Adenosina primera') {
-      dosisMl = (peso * 0.1);
+      // 3 mg/ml, 0,1 mg/kg. Máx 2 ml (6 mg).
+      dosisMl = ((peso * 0.1) / 3).clamp(0.0, 2.0);
     } else if (medicamento.nombre == 'Adenosina segunda') {
-      dosisMl = (peso * 0.2);
+      // 3 mg/ml, 0,2 mg/kg. Máx 4 ml (12 mg).
+      dosisMl = ((peso * 0.2) / 3).clamp(0.0, 4.0);
     } else if (medicamento.nombre == 'Adenosina tercera') {
-      dosisMl = (peso * 0.3);
+      // 3 mg/ml, 0,3 mg/kg. Máx 4 ml (12 mg).
+      dosisMl = ((peso * 0.3) / 3).clamp(0.0, 4.0);
     } else if (medicamento.nombre == 'Atropina') {
       dosisMl = (peso * 0.2);
     } else if (medicamento.nombre == 'Ácido tranexámico') {
@@ -237,31 +262,6 @@ class DosisCalculatorMeses {
         dosisMl = peso * 0.1;
       } else if (medicamento.categoria == 'Infusiones sedación') {
         dosisMg = peso;
-      }
-    }
-    // FORMULA PARA cON SR
-    else if (medicamento.nombre == 'Con SF') {
-      final double X = ((130 - 110) * peso * 0.6) / 154 * 1000;
-      dosisMl = X * 1;
-      mlDecimalPlaces = 0;
-    } else if (medicamento.nombre == 'Déficit de sodio') {
-      final double Y = ((125 - 110) * peso * 0.6) / 4;
-      dosisMl = Y * 1;
-    } else if (medicamento.nombre == 'Volumen de SG5%') {
-      if (medicamento.categoria == 'Reposición de sodio') {
-        final double c151 = ((125 - 110) * peso * 0.6) / 4;
-        dosisMl = c151 * 7;
-      }
-    } else if (medicamento.nombre == 'Velocidad de infusión a pasar en 3h') {
-      if (medicamento.categoria == 'Reposición de sodio') {
-        final double c151 = ((125 - 110) * peso * 0.6) / 4;
-
-        final double c152 = c151 * 7;
-
-        final double dosisMlPorHora = c152 / 3;
-        final double dosisRedondeada = _roundDouble(dosisMlPorHora, 0);
-        displayString =
-            '${DosisCalculatorMeses.formatDosis(dosisRedondeada)} ml/h';
       }
     } else if (medicamento.nombre == 'Ketamina' ||
         medicamento.nombre == 'Succinilcolina') {
@@ -383,26 +383,37 @@ class DosisCalculatorMeses {
       dosisMg = (peso * 40) / 3;
       mgDecimalPlaces = 0;
     } else if (medicamento.nombre == 'TET sin balón') {
-      final int edadMeses = paciente.edadMeses;
-      final double edadMesesDouble = edadMeses.toDouble();
-
-      final double valorNumerico = (edadMesesDouble / 4) + 4;
+      // Sin edad no se puede calcular (fórmulas por edad).
+      if (paciente.edadMeses <= 0) {
+        return {'display_string': CalcMsg.needAge};
+      }
+      // Excel: MROUND(edad_en_años/4 + 4; 0,5). Antes se usaban los meses
+      // como si fueran años (11 meses → 7,0 mm en vez de 4,0 mm).
+      final double edadAnios = paciente.edadMeses / 12;
+      final double valorNumerico = (edadAnios / 4) + 4;
       final double tetSize = ((valorNumerico * 2).round()) / 2;
 
       displayString = '${tetSize.toStringAsFixed(1)} mm';
     } else if (medicamento.nombre == 'TET con balón') {
-      final int edadMeses = paciente.edadMeses;
-      final double edadMesesDouble = edadMeses.toDouble();
-
-      final double valorNumerico = (edadMesesDouble / 4) + 3.5;
+      // Sin edad no se puede calcular (fórmulas por edad).
+      if (paciente.edadMeses <= 0) {
+        return {'display_string': CalcMsg.needAge};
+      }
+      // Excel: MROUND(edad_en_años/4 + 3,5; 0,5).
+      final double edadAnios = paciente.edadMeses / 12;
+      final double valorNumerico = (edadAnios / 4) + 3.5;
 
       final double tetSize = ((valorNumerico * 2).round()) / 2;
 
       displayString = '${tetSize.toStringAsFixed(1)} mm';
     } else if (medicamento.nombre == 'Longitud inserción a comisura labial') {
-      final int edadMeses = paciente.edadMeses;
-      final double edadMesesDouble = edadMeses.toDouble();
-      final double longitudCm = (edadMesesDouble / 2) + 12;
+      // Sin edad no se puede calcular (fórmulas por edad).
+      if (paciente.edadMeses <= 0) {
+        return {'display_string': CalcMsg.needAge};
+      }
+      // Excel: 12 + edad_en_años/2.
+      final double edadAnios = paciente.edadMeses / 12;
+      final double longitudCm = (edadAnios / 2) + 12;
 
       displayString = '${longitudCm.toStringAsFixed(1)} cm';
     } else if (medicamento.nombre == 'Talla de cánula según peso') {
@@ -417,8 +428,15 @@ class DosisCalculatorMeses {
     if (displayString.isNotEmpty) {
       return {'display_string': displayString};
     } else {
-      dosisMg = _roundDouble(dosisMg, mgDecimalPlaces);
-      dosisMl = _roundDouble(dosisMl, mlDecimalPlaces);
+      // Dosis < 1 → al menos 2 decimales para no redondear a 0 (p. ej. 0,04 ml).
+      dosisMg = _roundDouble(
+        dosisMg,
+        dosisMg < 1 ? max(2, mgDecimalPlaces) : mgDecimalPlaces,
+      );
+      dosisMl = _roundDouble(
+        dosisMl,
+        dosisMl < 1 ? max(2, mlDecimalPlaces) : mlDecimalPlaces,
+      );
       dosisJulios = _roundDouble(dosisJulios, 2);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};

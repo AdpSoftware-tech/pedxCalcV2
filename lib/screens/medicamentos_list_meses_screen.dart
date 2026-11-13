@@ -23,7 +23,12 @@ import 'package:mi_app/screens/presion_arterial_mujeres_screen.dart';
 import 'package:mi_app/screens/presion_arterial_hombres_screen.dart';
 
 import '../l10n/app_localizations.dart';
+import '../widgets/vitales_menu.dart';
 import '../i18n/med_i18n.dart';
+import '../utils/calc_messages.dart';
+import '../data/menu_categorias.dart';
+import '../utils/favoritos_store.dart';
+import '../widgets/menu_pestanas.dart';
 
 class MedicamentosListMesesScreen extends StatefulWidget {
   final Paciente paciente;
@@ -48,56 +53,40 @@ class _MedicamentosListMesesScreenState
   static const Color _primaryBlueDark = Color.fromARGB(255, 14, 113, 194);
   static const Color _highlightGreen = Color.fromARGB(255, 83, 232, 103);
 
+  /// Verde oscuro para las dosis: legible sobre blanco (contraste ~6:1).
+  static const Color _doseGreen = Color(0xFF1B7F3B);
+
   final TextEditingController _searchController = TextEditingController();
   String _searchText = '';
 
-  late Map<String, List<Medicamento>> _groupedMedicamentos;
+  /// Pestaña del menú elegida; null = todas.
+  MenuPestana? _pestana;
 
-  // ✅ Filtro por rango alfabético (categorías)
-  String _alphaRange = 'TODAS';
-
-  // ✅ Placeholder para favoritos
   bool _onlyFavorites = false;
+
+  final FavoritosStore _favoritos = FavoritosStore.de('meses');
 
   // Barra inferior fija
   static const double _buttonBarHeight = 72.0;
 
-  bool _didLoadI18n = false;
-
   @override
   void initState() {
     super.initState();
-
-    // ✅ NO usar AppLocalizations.of(context) aquí
-    _groupedMedicamentos = _groupAndSortMedicamentosRaw(
-      _getFilteredMedicamentos(),
-    );
+    _favoritos.claves.addListener(_onFavoritosChanged);
+    _favoritos.cargar();
 
     _searchController.addListener(() {
       setState(() => _searchText = _searchController.text.toLowerCase().trim());
     });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    // ✅ Aquí ya existe Localizations/Theme/etc
-    if (_didLoadI18n) return;
-    _didLoadI18n = true;
-
-    final t = AppLocalizations.of(context);
-
-    setState(() {
-      _groupedMedicamentos = _groupAndSortMedicamentos(
-        _getFilteredMedicamentos(),
-        t,
-      );
-    });
+  void _onFavoritosChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _favoritos.claves.removeListener(_onFavoritosChanged);
     _searchController.dispose();
     super.dispose();
   }
@@ -110,19 +99,19 @@ class _MedicamentosListMesesScreenState
     Widget? screen;
 
     if (key == 'HR') {
-      screen = const HeartRateScreen();
+      screen = HeartRateScreen(paciente: widget.paciente);
     } else if (key == 'RR') {
-      screen = const RespiratoryRateScreen();
+      screen = RespiratoryRateScreen(paciente: widget.paciente);
     } else if (key == 'BP') {
-      screen = const BloodPressureScreen();
+      screen = BloodPressureScreen(paciente: widget.paciente);
     } else if (key == 'TEMP') {
       screen = const TemperatureScreen();
     } else if (key == 'O2') {
       screen = const OxygenSaturationScreen();
     } else if (key == 'BP_W') {
-      screen = const PresionArterialMujeresScreen();
+      screen = PresionArterialMujeresScreen(paciente: widget.paciente);
     } else if (key == 'BP_M') {
-      screen = const PresionArterialHombresScreen();
+      screen = PresionArterialHombresScreen(paciente: widget.paciente);
     }
 
     if (screen == null) return;
@@ -136,117 +125,81 @@ class _MedicamentosListMesesScreenState
   // ✅ MODALES CENTRADOS (SING V / PAM)
   // ============================
 
+  // Colores de los íconos de signos vitales.
+  static const Color _cFc = Color(0xFFD64545);
+  static const Color _cFr = Color(0xFF2E8B57);
+  static const Color _cPa = Color(0xFF0E71C2);
+  static const Color _cTemp = Color(0xFFE08A00);
+  static const Color _cO2 = Color(0xFF00897B);
+
   void _showSignosVitalesOptions(AppLocalizations t) {
-    _showCenteredMenu(
-      title: t.modalVitalsTitle,
-      options: [
-        _MenuOption(keyId: 'HR', label: t.vitalHeartRate),
-        _MenuOption(keyId: 'RR', label: t.vitalRespRate),
-        _MenuOption(keyId: 'BP', label: t.vitalBloodPressure),
-        _MenuOption(keyId: 'TEMP', label: t.vitalTemperature),
-        _MenuOption(keyId: 'O2', label: t.vitalOxygenSat),
+    mostrarMenuVitales(
+      context,
+      titulo: t.vsTitle,
+      subtitulo: t.vsSubtitle,
+      icono: Icons.monitor_heart_outlined,
+      opciones: [
+        VitalOpcion(
+          icono: Icons.favorite,
+          color: _cFc,
+          titulo: t.vitalHeartRate,
+          subtitulo: t.vsHrSub,
+          abrir: () => _openVitalOptionKeyAndWait('HR'),
+        ),
+        VitalOpcion(
+          icono: Icons.air,
+          color: _cFr,
+          titulo: t.vitalRespRate,
+          subtitulo: t.vsRrSub,
+          abrir: () => _openVitalOptionKeyAndWait('RR'),
+        ),
+        VitalOpcion(
+          icono: Icons.speed,
+          color: _cPa,
+          titulo: t.vitalBloodPressure,
+          subtitulo: t.vsBpSub,
+          abrir: () => _openVitalOptionKeyAndWait('BP'),
+        ),
+        VitalOpcion(
+          icono: Icons.thermostat,
+          color: _cTemp,
+          titulo: t.vitalTemperature,
+          subtitulo: t.vsTempSub,
+          abrir: () => _openVitalOptionKeyAndWait('TEMP'),
+        ),
+        VitalOpcion(
+          icono: Icons.bubble_chart_outlined,
+          color: _cO2,
+          titulo: t.vitalOxygenSat,
+          subtitulo: t.vsO2Sub,
+          abrir: () => _openVitalOptionKeyAndWait('O2'),
+        ),
       ],
-      closeTooltip: t.modalClose,
-      isPamMenu: false,
     );
   }
 
   void _showPAMOptions(AppLocalizations t) {
-    _showCenteredMenu(
-      title: t.modalPamTitle,
-      options: [
-        _MenuOption(keyId: 'BP_W', label: t.vitalBloodPressureWomen),
-        _MenuOption(keyId: 'BP_M', label: t.vitalBloodPressureMen),
+    mostrarMenuVitales(
+      context,
+      titulo: t.pamTitle,
+      subtitulo: t.pamSubtitle,
+      icono: Icons.favorite_outline,
+      opciones: [
+        VitalOpcion(
+          icono: Icons.female,
+          color: const Color(0xFFC2185B),
+          titulo: t.pamWomen,
+          subtitulo: t.pamTableSub,
+          abrir: () => _openVitalOptionKeyAndWait('BP_W'),
+        ),
+        VitalOpcion(
+          icono: Icons.male,
+          color: const Color(0xFF1565C0),
+          titulo: t.pamMen,
+          subtitulo: t.pamTableSub,
+          abrir: () => _openVitalOptionKeyAndWait('BP_M'),
+        ),
       ],
-      closeTooltip: t.modalClose,
-      isPamMenu: true,
-    );
-  }
-
-  void _showCenteredMenu({
-    required String title,
-    required List<_MenuOption> options,
-    required String closeTooltip,
-    required bool isPamMenu,
-  }) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) {
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 18,
-          ),
-          backgroundColor: const Color(0xFFF6F3FB),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(26),
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        icon: const Icon(Icons.close, color: Colors.black45),
-                        tooltip: closeTooltip,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Divider(height: 1),
-                  const SizedBox(height: 8),
-
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: options.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 6),
-                    itemBuilder: (_, i) {
-                      final opt = options[i];
-                      return _CenteredModalTile(
-                        text: opt.label,
-                        onTap: () async {
-                          Navigator.pop(ctx);
-                          await _openVitalOptionKeyAndWait(opt.keyId);
-
-                          if (!mounted) return;
-                          final t = AppLocalizations.of(context);
-
-                          // ✅ Reabrir el mismo modal (PAM o Vitals)
-                          if (isPamMenu) {
-                            _showPAMOptions(t);
-                          } else {
-                            _showSignosVitalesOptions(t);
-                          }
-                        },
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 6),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -254,57 +207,20 @@ class _MedicamentosListMesesScreenState
   // DATA
   // ============================
 
-  bool _isExcludedCategoria(String categoria) {
-    final c = _normalize(categoria);
-    return c == _normalize('LÍQUIDS IV') ||
-        c == _normalize('Líquids IV') ||
-        c == _normalize('Reposición de HCO3') ||
-        c == _normalize('Reposición de Sodio');
-  }
+  // Estas categorías se calculan en "Cálculos especiales".
+  static final Set<String> _categoriasExcluidas = {
+    normalizarCategoria('Líquids IV'),
+    normalizarCategoria('Reposición de HCO3'),
+    normalizarCategoria('Reposición de Sodio'),
+  };
+
+  bool _isExcludedCategoria(String categoria) =>
+      _categoriasExcluidas.contains(normalizarCategoria(categoria));
 
   List<Medicamento> _getFilteredMedicamentos() {
     return medicamentosMeses
         .where((m) => !_isExcludedCategoria(m.categoria))
         .toList();
-  }
-
-  // ✅ RAW (sin i18n) para initState
-  Map<String, List<Medicamento>> _groupAndSortMedicamentosRaw(
-    List<Medicamento> medicamentos,
-  ) {
-    final Map<String, List<Medicamento>> grouped = {};
-    for (var med in medicamentos) {
-      grouped.putIfAbsent(med.categoria, () => []);
-      grouped[med.categoria]!.add(med);
-    }
-
-    grouped.forEach((key, value) {
-      value.sort((a, b) => a.nombre.compareTo(b.nombre));
-    });
-
-    return Map.fromEntries(
-      grouped.entries.toList()..sort((e1, e2) => e1.key.compareTo(e2.key)),
-    );
-  }
-
-  // ✅ i18n (EN/ES) para didChangeDependencies
-  Map<String, List<Medicamento>> _groupAndSortMedicamentos(
-    List<Medicamento> medicamentos,
-    AppLocalizations t,
-  ) {
-    final Map<String, List<Medicamento>> grouped = {};
-    for (var med in medicamentos) {
-      grouped.putIfAbsent(med.categoria, () => []);
-      grouped[med.categoria]!.add(med);
-    }
-
-    grouped.forEach((key, value) {
-      value.sort((a, b) => MedI18n.name(a, t).compareTo(MedI18n.name(b, t)));
-    });
-
-    return Map.fromEntries(
-      grouped.entries.toList()..sort((e1, e2) => e1.key.compareTo(e2.key)),
-    );
   }
 
   List<Medicamento> _getSearchResults(AppLocalizations t) {
@@ -327,74 +243,8 @@ class _MedicamentosListMesesScreenState
     }).toList();
   }
 
-  // ============================
-  // ✅ Normalizar (acentos / ñ)
-  // ============================
-  String _normalize(String s) {
-    final t = s.trim().toLowerCase();
-    return t
-        .replaceAll('á', 'a')
-        .replaceAll('à', 'a')
-        .replaceAll('ä', 'a')
-        .replaceAll('â', 'a')
-        .replaceAll('é', 'e')
-        .replaceAll('è', 'e')
-        .replaceAll('ë', 'e')
-        .replaceAll('ê', 'e')
-        .replaceAll('í', 'i')
-        .replaceAll('ì', 'i')
-        .replaceAll('ï', 'i')
-        .replaceAll('î', 'i')
-        .replaceAll('ó', 'o')
-        .replaceAll('ò', 'o')
-        .replaceAll('ö', 'o')
-        .replaceAll('ô', 'o')
-        .replaceAll('ú', 'u')
-        .replaceAll('ù', 'u')
-        .replaceAll('ü', 'u')
-        .replaceAll('û', 'u')
-        .replaceAll('ñ', 'n');
-  }
-
-  String _firstLetterOfCategory(String categoria) {
-    final n = _normalize(categoria);
-    if (n.isEmpty) return '#';
-    final c = n[0].toUpperCase();
-    final isLetter = RegExp(r'[A-Z]').hasMatch(c);
-    return isLetter ? c : '#';
-  }
-
-  bool _categoryInAlphaRange(String categoria) {
-    if (_alphaRange == 'TODAS') return true;
-
-    final letter = _firstLetterOfCategory(categoria);
-
-    switch (_alphaRange) {
-      case 'A-C':
-        return ['A', 'B', 'C'].contains(letter);
-      case 'D-F':
-        return ['D', 'E', 'F'].contains(letter);
-      case 'G-I':
-        return ['G', 'H', 'I'].contains(letter);
-      case 'J-L':
-        return ['J', 'K', 'L'].contains(letter);
-      case 'M-O':
-        return ['M', 'N', 'O'].contains(letter);
-      case 'P-R':
-        return ['P', 'Q', 'R'].contains(letter);
-      case 'S-U':
-        return ['S', 'T', 'U'].contains(letter);
-      case 'V-Z':
-        return ['V', 'W', 'X', 'Y', 'Z'].contains(letter);
-      default:
-        return true;
-    }
-  }
-
-  bool _passesFavoriteFilter(Medicamento med) {
-    if (!_onlyFavorites) return true;
-    return false;
-  }
+  bool _passesFavoriteFilter(Medicamento med) =>
+      !_onlyFavorites || _favoritos.esFavorito(med);
 
   // ============================
   // Dosis display (Meses)
@@ -406,7 +256,10 @@ class _MedicamentosListMesesScreenState
     );
 
     if (calculated.containsKey('display_string')) {
-      return (calculated['display_string'] as String).trim();
+      return CalcMsg.localize(
+        (calculated['display_string'] as String).trim(),
+        AppLocalizations.of(context),
+      );
     }
 
     final double dosisMl = (calculated['ml'] as double?) ?? 0.0;
@@ -421,7 +274,7 @@ class _MedicamentosListMesesScreenState
     if (dosisJ > 0.005)
       doses.add('${DosisCalculatorMeses.formatDosis(dosisJ)} J');
 
-    return doses.isEmpty ? 'N/A' : doses.join(' / ');
+    return doses.isEmpty ? 'N/A' : doses.join(' · ');
   }
 
   // ============================
@@ -436,8 +289,11 @@ class _MedicamentosListMesesScreenState
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
-        color: const Color(0xFFF6F3FB),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFFE3EAF2)),
+        ),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           hoverColor: _primaryBlueDark.withAlpha((0.05 * 255).round()),
@@ -449,50 +305,45 @@ class _MedicamentosListMesesScreenState
                 builder: (_) => MedicamentoDetailMesesScreen(
                   medicamento: medicamento,
                   paciente: widget.paciente,
+                  esPesoEstimado: widget.esPesoEstimado,
                 ),
               ),
             );
           },
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 2,
+            contentPadding: const EdgeInsets.fromLTRB(4, 4, 8, 4),
+            leading: FavoritoButton(
+              esFavorito: _favoritos.esFavorito(medicamento),
+              onPressed: () => _favoritos.alternar(medicamento),
             ),
+            minLeadingWidth: 0,
+            horizontalTitleGap: 4,
             title: Text(
               MedI18n.name(medicamento, t),
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                color: Color(0xFF14212C),
+              ),
             ),
-            subtitle: Text(
-              t.viewDetails,
-              style: const TextStyle(fontSize: 12, color: Colors.black45),
+            // La dosis va debajo del nombre: así ninguno de los dos se corta.
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                dosisDisplay,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _doseGreen,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                ),
+              ),
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: 140,
-                  ), // ajusta 120-180
-                  child: Text(
-                    dosisDisplay,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    softWrap: false,
-                    textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      color: _highlightGreen,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Icon(
-                  Icons.chevron_right,
-                  size: 26,
-                  color: _primaryBlueDark,
-                ),
-              ],
+            trailing: const Icon(
+              Icons.chevron_right,
+              size: 26,
+              color: _primaryBlueDark,
             ),
           ),
         ),
@@ -523,7 +374,7 @@ class _MedicamentosListMesesScreenState
                 spacing: 10,
                 children: [
                   Text(
-                    '${peso.toStringAsFixed(1)} kg · $meses ${t.patientHeaderMonthsUnit}',
+                    '${peso.toStringAsFixed(1)} kg · ${meses > 0 ? '$meses ${t.patientHeaderMonthsUnit}' : t.commonNA}',
                     style: const TextStyle(fontWeight: FontWeight.w900),
                   ),
                   Chip(
@@ -562,57 +413,12 @@ class _MedicamentosListMesesScreenState
     );
   }
 
-  // ============================
-  // Chips filtros
-  // ============================
-  Widget _categoryAlphabetFilters(AppLocalizations t) {
-    Widget choice(String label) {
-      final selected = _alphaRange == label;
-      return ChoiceChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => setState(() => _alphaRange = label),
-        selectedColor: _primaryBlueDark.withAlpha((0.15 * 255).round()),
-        labelStyle: TextStyle(
-          fontWeight: FontWeight.w900,
-          color: selected ? _primaryBlueDark : Colors.black87,
-        ),
-        side: BorderSide(
-          color: _primaryBlueDark.withOpacity(selected ? 0.65 : 0.25),
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          choice(t.filterAll), // TODAS / ALL
-          choice('A-C'),
-          choice('D-F'),
-          choice('G-I'),
-          choice('J-L'),
-          choice('M-O'),
-          choice('P-R'),
-          choice('S-U'),
-          choice('V-Z'),
-          FilterChip(
-            label: Text(t.filterFavorites),
-            selected: _onlyFavorites,
-            onSelected: (v) => setState(() => _onlyFavorites = v),
-            selectedColor: _highlightGreen.withAlpha((0.20 * 255).round()),
-            labelStyle: TextStyle(
-              fontWeight: FontWeight.w900,
-              color: _onlyFavorites ? const Color(0xFF1B5E20) : Colors.black87,
-            ),
-            side: BorderSide(
-              color: _highlightGreen.withOpacity(_onlyFavorites ? 0.7 : 0.25),
-            ),
-          ),
-        ],
-      ),
+  Widget _menuPestanas() {
+    return MenuPestanasBar(
+      seleccion: _pestana,
+      soloFavoritos: _onlyFavorites,
+      onSeleccion: (p) => setState(() => _pestana = p),
+      onSoloFavoritos: (v) => setState(() => _onlyFavorites = v),
     );
   }
 
@@ -627,8 +433,10 @@ class _MedicamentosListMesesScreenState
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) =>
-                  CalculosEspecialesScreen(paciente: widget.paciente),
+              builder: (_) => CalculosEspecialesScreen(
+                paciente: widget.paciente,
+                esPesoEstimado: widget.esPesoEstimado,
+              ),
             ),
           );
         },
@@ -717,7 +525,10 @@ class _MedicamentosListMesesScreenState
       String ml = 'N/A', mg = 'N/A', j = 'N/A';
 
       if (calculated.containsKey('display_string')) {
-        ml = (calculated['display_string'] as String).trim();
+        ml = CalcMsg.localize(
+          (calculated['display_string'] as String).trim(),
+          AppLocalizations.of(context),
+        );
       } else {
         final double dosisMl = (calculated['ml'] as double?) ?? 0.0;
         final double dosisMg = (calculated['mg'] as double?) ?? 0.0;
@@ -746,6 +557,8 @@ class _MedicamentosListMesesScreenState
       MaterialPageRoute(
         builder: (_) => PrintablePatientDataScreen(
           paciente: widget.paciente,
+          esPesoEstimado: widget.esPesoEstimado,
+          esLactante: true,
           medicamentosCalculados: meds,
         ),
       ),
@@ -763,44 +576,59 @@ class _MedicamentosListMesesScreenState
     final List<Widget> items = [];
 
     if (_searchText.isNotEmpty) {
+      // La búsqueda recorre todas las pestañas.
       for (final med in searchResults) {
-        if (_categoryInAlphaRange(med.categoria) &&
-            _passesFavoriteFilter(med)) {
-          items.add(_buildMedicamentoListTile(med, t));
-        }
+        items.add(_buildMedicamentoListTile(med, t));
       }
     } else {
       items.add(_patientHeader(t));
-      items.add(_categoryAlphabetFilters(t));
-      items.add(_specialCalculationsCard(t));
+      items.add(_menuPestanas());
 
-      _groupedMedicamentos.forEach((categoria, medicamentos) {
-        if (!_categoryInAlphaRange(categoria)) return;
+      // "Cálculos especiales" = sodio y HCO3 (Electrolitos) + líquidos IV (Shock).
+      if (!_onlyFavorites &&
+          (_pestana == null ||
+              _pestana == MenuPestana.electrolitos ||
+              _pestana == MenuPestana.shock)) {
+        items.add(_specialCalculationsCard(t));
+      }
 
-        items.add(
-          Padding(
-            key: ValueKey(categoria),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 10.0,
+      final agrupado = agruparPorPestana(
+        _getFilteredMedicamentos().where(_passesFavoriteFilter),
+        nombreCategoria: (c) => MedI18n.category(c, t),
+        nombreMed: (m) => MedI18n.name(m, t),
+      );
+
+      var hayMedicamentos = false;
+      agrupado.forEach((pestana, categorias) {
+        if (_pestana != null && _pestana != pestana) return;
+        hayMedicamentos = true;
+
+        if (_pestana == null) {
+          items.add(
+            PestanaHeader(
+              key: ValueKey('tab-${pestana.name}'),
+              pestana: pestana,
             ),
-            child: Text(
-              MedI18n.category(categoria, t),
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                color: _primaryBlueDark,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-          ),
-        );
+          );
+        }
 
-        for (final med in medicamentos) {
-          if (_passesFavoriteFilter(med)) {
+        categorias.forEach((categoria, medicamentos) {
+          items.add(
+            CategoriaHeader(
+              key: ValueKey(categoria),
+              texto: MedI18n.category(categoria, t),
+              pestana: pestana,
+            ),
+          );
+          for (final med in medicamentos) {
             items.add(_buildMedicamentoListTile(med, t));
           }
-        }
+        });
       });
+
+      if (_onlyFavorites && !hayMedicamentos) {
+        items.add(const FavoritosVacio());
+      }
     }
 
     return GestureDetector(
@@ -859,7 +687,7 @@ class _MedicamentosListMesesScreenState
                           child: _BottomActionButton(
                             label: t.bottomVitals, // ✅ i18n
                             icon: Icons.monitor_heart_outlined,
-                            background: _highlightGreen,
+                            background: _primaryBlueDark,
                             onTap: () => _showSignosVitalesOptions(t),
                           ),
                         ),
@@ -888,61 +716,6 @@ class _MedicamentosListMesesScreenState
 // ===============================
 // Helpers
 // ===============================
-
-class _MenuOption {
-  final String keyId; // HR, RR, BP...
-  final String label; // i18n label
-  const _MenuOption({required this.keyId, required this.label});
-}
-
-/// ===============================
-/// ✅ Tile bonito para el modal centrado
-/// ===============================
-class _CenteredModalTile extends StatelessWidget {
-  final String text;
-  final VoidCallback onTap;
-
-  const _CenteredModalTile({required this.text, required this.onTap});
-
-  static const Color _primaryBlueDark = Color.fromARGB(255, 14, 113, 194);
-  static const Color _highlightGreen = Color.fromARGB(255, 83, 232, 103);
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          decoration: BoxDecoration(
-            color: Colors.white.withAlpha((0.65 * 255).round()),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: _primaryBlueDark.withAlpha((0.15 * 255).round()),
-            ),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  text,
-                  style: const TextStyle(
-                    color: _primaryBlueDark,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const Icon(Icons.chevron_right, size: 26, color: _highlightGreen),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// ===============================
 /// ✅ Botón inferior más pro
@@ -975,13 +748,18 @@ class _BottomActionButton extends StatelessWidget {
         children: [
           Icon(icon, color: Colors.white, size: 22),
           const SizedBox(width: 10),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              color: Colors.white,
-              letterSpacing: 0.5,
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 0.5,
+                ),
+              ),
             ),
           ),
         ],

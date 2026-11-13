@@ -32,6 +32,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+/build
 
 # Symbolication related
 app.*.symbols
@@ -68,3 +69,6 @@ coverage/
 # Temporary files
 *.tmp
 *.bak
+
+# Tablas Excel de referencia (contienen datos de pacientes: no subir a git)
+*.xlsx

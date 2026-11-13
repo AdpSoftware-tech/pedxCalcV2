@@ -1,514 +1,421 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mi_app/models/paciente.dart';
 import 'package:mi_app/screens/select_medicamento_screen.dart';
 import 'package:mi_app/screens/instrucciones_screen_with_terms.dart';
-import 'package:mi_app/screens/edad_selection_screen.dart';
+import 'package:mi_app/theme/app_ui.dart';
+import 'package:mi_app/widgets/language_toggle.dart';
 import '../l10n/app_localizations.dart';
+import '../utils/peso_utils.dart';
 
+/// Datos del paciente de 1 a 14 años.
+///
+/// Se puede continuar con solo el peso, solo la edad (peso estimado) o
+/// ambos.
 class PacienteDataScreen extends StatefulWidget {
+  /// Se conserva por compatibilidad: la pantalla solo se usa en modo años.
   final bool isEdadAniosMode;
 
-  const PacienteDataScreen({super.key, this.isEdadAniosMode = false});
+  const PacienteDataScreen({super.key, this.isEdadAniosMode = true});
 
   @override
   State<PacienteDataScreen> createState() => _PacienteDataScreenState();
 }
 
 class _PacienteDataScreenState extends State<PacienteDataScreen> {
+  static const Color _softBorder = Color(0xFFD3E3F3);
+
+  final _formKey = GlobalKey<FormState>();
   final _pesoController = TextEditingController();
   final _edadAniosController = TextEditingController();
-  final _edadMesesController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-
-  double? _pesoEstimadoValue;
-  String _pesoEstimadoText = 'N/A';
+  final _edadFocus = FocusNode();
 
   @override
   void initState() {
     super.initState();
-    if (widget.isEdadAniosMode) {
-      _edadMesesController.clear();
-    }
-
-    _edadAniosController.addListener(_calcularPesoEstimado);
-
-    // refrescar UI
     _pesoController.addListener(_refrescarUI);
-    _edadMesesController.addListener(_refrescarUI);
+    _edadAniosController.addListener(_refrescarUI);
   }
 
   @override
   void dispose() {
     _pesoController.removeListener(_refrescarUI);
+    _edadAniosController.removeListener(_refrescarUI);
     _pesoController.dispose();
-    _edadAniosController.removeListener(_calcularPesoEstimado);
     _edadAniosController.dispose();
-    _edadMesesController.removeListener(_refrescarUI);
-    _edadMesesController.dispose();
+    _edadFocus.dispose();
     super.dispose();
-  }
-
-  void _calcularPesoEstimado() {
-    final int? edadAnios = int.tryParse(_edadAniosController.text);
-    if (edadAnios != null && edadAnios >= 1 && edadAnios <= 14) {
-      double estimado;
-      if (edadAnios >= 1 && edadAnios <= 4) {
-        estimado = (edadAnios * 2) + 8.0;
-      } else {
-        estimado = (edadAnios * 3) + 3.0;
-      }
-      setState(() {
-        _pesoEstimadoValue = estimado;
-        _pesoEstimadoText = '${estimado.toStringAsFixed(1)} Kg';
-      });
-    } else {
-      setState(() {
-        _pesoEstimadoValue = null;
-        _pesoEstimadoText = 'N/A';
-      });
-    }
   }
 
   void _refrescarUI() {
     if (mounted) setState(() {});
   }
 
+  // ---------- Estado derivado de los campos ----------
+
+  double? get _pesoIngresado => parseDecimal(_pesoController.text);
+
   bool get _tienePesoValido {
-    final p = double.tryParse(_pesoController.text.trim());
-    return p != null && p > 0;
+    final p = _pesoIngresado;
+    return p != null && rangoPesoAnios.contiene(p);
   }
 
-  // bool get _tieneEdadAniosValida {
-  //   final e = int.tryParse(_edadAniosController.text.trim());
-  //   return e != null && e >= 1 && e <= 14;
-  // }
-
-  bool get _mostrarPesoEstimadoPrincipal {
-    return widget.isEdadAniosMode &&
-        !_tienePesoValido &&
-        _pesoEstimadoValue != null;
+  int? get _edadValida {
+    final e = int.tryParse(_edadAniosController.text.trim());
+    return (e != null && e >= 1 && e <= 14) ? e : null;
   }
+
+  /// Peso estimado por edad; solo se usa si no hay peso real.
+  double? get _pesoEstimadoKg =>
+      _tienePesoValido ? null : pesoEstimadoAnios(_edadValida);
 
   String _labelBoton(AppLocalizations t) {
     if (_tienePesoValido) return t.patientBtnWithEnteredWeight;
-    if (widget.isEdadAniosMode && _pesoEstimadoValue != null) {
-      return t.patientBtnWithEstimatedWeight;
-    }
+    if (_pesoEstimadoKg != null) return t.patientBtnWithEstimatedWeight;
     return t.patientBtnCalculateDose;
   }
 
+  static String _fmtKg(double kg) =>
+      kg == kg.roundToDouble() ? kg.toInt().toString() : kg.toStringAsFixed(1);
+
+  // ---------- Acción ----------
+
   void _calcularDosis(AppLocalizations t) {
-    if (_formKey.currentState!.validate()) {
-      final double? pesoIngresado = double.tryParse(_pesoController.text);
-      final int? edadAnios = int.tryParse(_edadAniosController.text);
-      final int? edadMeses = int.tryParse(_edadMesesController.text);
-      final bool usoPesoEstimado =
-          (pesoIngresado == null || pesoIngresado <= 0);
+    if (!_formKey.currentState!.validate()) return;
 
-      double? pesoFinalParaCalculo;
+    final double? peso = _tienePesoValido ? _pesoIngresado : _pesoEstimadoKg;
+    if (peso == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(t.patientSnackNeedWeightOrAge),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
 
-      if (pesoIngresado != null && pesoIngresado > 0) {
-        pesoFinalParaCalculo = pesoIngresado;
-      } else if (widget.isEdadAniosMode && _pesoEstimadoValue != null) {
-        pesoFinalParaCalculo = _pesoEstimadoValue;
-      }
+    FocusScope.of(context).unfocus();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SelectMedicamentoScreen(
+          // edadAnios 0 = edad no ingresada (se muestra N/A).
+          paciente: Paciente(
+            pesoKg: peso,
+            edadAnios: _edadValida ?? 0,
+            edadMeses: 0,
+          ),
+          esPesoEstimado: !_tienePesoValido,
+        ),
+      ),
+    );
+  }
 
-      if (pesoFinalParaCalculo != null &&
-          (edadAnios != null || edadMeses != null)) {
-        final paciente = Paciente(
-          pesoKg: pesoFinalParaCalculo,
-          edadAnios: edadAnios ?? 0,
-          edadMeses: edadMeses ?? 0,
-        );
+  // ---------- UI ----------
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SelectMedicamentoScreen(
-              paciente: paciente,
-              esPesoEstimado: usoPesoEstimado,
+  InputDecoration _decoracion({
+    required String label,
+    required String hint,
+    required String helper,
+    required IconData icon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      helperText: helper,
+      helperMaxLines: 2,
+      prefixIcon: Icon(icon, color: AppUI.primaryBlue),
+      floatingLabelStyle: const TextStyle(color: AppUI.primaryBlue),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: AppUI.primaryBlue, width: 2),
+      ),
+    );
+  }
+
+  Widget _howItWorks(AppLocalizations t) {
+    final titulo = t.patientHowItWorks.replaceAll(RegExp(r':\s*$'), '');
+    final puntos = t.pdYearsHowBody
+        .split('\n')
+        .map((l) => l.replaceFirst(RegExp(r'^\s*•\s*'), '').trim())
+        .where((l) => l.isNotEmpty);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppUI.softBlueBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _softBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.info_outline,
+                color: AppUI.primaryBlue,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                titulo,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: AppUI.primaryBlue,
+                ),
+              ),
+            ],
+          ),
+          for (final p in puntos)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 7, left: 2, right: 8),
+                    child: Icon(
+                      Icons.circle,
+                      size: 5,
+                      color: AppUI.primaryBlue,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      p,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        height: 1.35,
+                        color: Color(0xFF33475B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Recuadro con el peso que se va a usar (real o estimado).
+  Widget _pesoResumen(AppLocalizations t) {
+    final bool real = _tienePesoValido;
+    final double? kg = real ? _pesoIngresado : _pesoEstimadoKg;
+    if (kg == null) return const SizedBox.shrink();
+
+    final Color fondo = real ? AppUI.softGreenBg : const Color(0xFFFFF4DC);
+    final Color borde = real
+        ? const Color(0xFFB7E4C7)
+        : const Color(0xFFF2C66D);
+    final Color texto = real
+        ? const Color(0xFF1B5E20)
+        : const Color(0xFF7A4E00);
+
+    return Container(
+      key: ValueKey(real ? 'peso-real' : 'peso-estimado'),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: fondo,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borde),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            real ? Icons.check_circle : Icons.warning_amber_rounded,
+            color: texto,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  real
+                      ? t.pdRealWeight(_fmtKg(kg))
+                      : t.pdEstimatedWeight(_fmtKg(kg)),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: texto,
+                  ),
+                ),
+                if (!real)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      t.pdEstimatedHint,
+                      style: TextStyle(fontSize: 13, color: texto),
+                    ),
+                  ),
+              ],
             ),
           ),
-        );
-      } else {
-        String errorMessage = t.patientSnackNeedWeightOrAge;
-        if (!widget.isEdadAniosMode) {
-          errorMessage = t.patientSnackNeedWeightAndAge;
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
-      }
-    }
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(t.patientAppBarTitleYears)),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Card(
-                  elevation: 4,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          t.patientHeaderTitle,
-                          style: Theme.of(context).textTheme.headlineMedium!
-                              .copyWith(
-                                color: const Color.fromARGB(255, 14, 113, 194),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(t.patientAppBarTitleYears),
+          actions: [
+            const LanguageToggleButton(),
+            IconButton(
+              tooltip: t.navInstructions,
+              icon: const Icon(Icons.info_outline),
+              onPressed: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const InstruccionesScreenWithTerms(),
+                ),
+              ),
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: AppUI.maxWidth),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: _softBorder),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              t.pdYearsTitle,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
                                 fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                color: AppUI.primaryBlue,
                               ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 20),
+                            ),
+                            const SizedBox(height: 14),
+                            _howItWorks(t),
+                            const SizedBox(height: 18),
 
-                        // ✅ Bloque "Cómo funciona"
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEAF3FF),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color.fromARGB(
-                                255,
-                                14,
-                                113,
-                                194,
-                              ).withAlpha((0.25 * 255).round()),
-                            ),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Icon(
-                                Icons.info_outline,
-                                color: Color.fromARGB(255, 14, 113, 194),
+                            // Peso (opcional)
+                            TextFormField(
+                              key: const ValueKey('campo-peso'),
+                              controller: _pesoController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
+                              textInputAction: TextInputAction.next,
+                              onFieldSubmitted: (_) =>
+                                  _edadFocus.requestFocus(),
+                              decoration: _decoracion(
+                                label: t.pdWeightLabel,
+                                hint: t.patientWeightHint,
+                                helper: t.pdWeightHelperOptional,
+                                icon: Icons.monitor_weight_outlined,
                               ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  '${t.patientHowItWorks}\n${t.patientHowItWorksBody}',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        TextFormField(
-                          controller: _pesoController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: t.patientWeightLabel,
-                            hintText: t.patientWeightHint,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: const BorderSide(
-                                color: Color.fromARGB(255, 14, 113, 194),
-                                width: 2.0,
-                              ),
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.scale,
-                              color: Color.fromARGB(255, 14, 113, 194),
-                            ),
-                            floatingLabelStyle: const TextStyle(
-                              color: Color.fromARGB(255, 14, 113, 194),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              if (widget.isEdadAniosMode &&
-                                  _pesoEstimadoValue != null &&
-                                  _pesoEstimadoValue! > 0) {
-                                return null;
-                              }
-                              return t.patientValWeightOrValidAgeToEstimate;
-                            }
-                            if (double.tryParse(value) == null) {
-                              return t.patientValInvalidNumber;
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        TextFormField(
-                          controller: _edadAniosController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: t.patientAgeYearsLabel,
-                            hintText: t.patientAgeYearsHint,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              borderSide: BorderSide(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                            focusedBorder: const OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(8),
-                              ),
-                              borderSide: BorderSide(
-                                color: Color.fromARGB(255, 14, 113, 194),
-                                width: 2.0,
-                              ),
-                            ),
-                            prefixIcon: const Icon(
-                              Icons.cake,
-                              color: Color.fromARGB(255, 14, 113, 194),
-                            ),
-                            floatingLabelStyle: const TextStyle(
-                              color: Color.fromARGB(255, 14, 113, 194),
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              if ((!widget.isEdadAniosMode &&
-                                      _edadMesesController.text.isEmpty) ||
-                                  (widget.isEdadAniosMode &&
-                                      _pesoController.text.isEmpty)) {
-                                return t.patientValEnterAgeYears;
-                              }
-                              return null;
-                            }
-                            if (int.tryParse(value) == null) {
-                              return t.patientValInvalidNumber;
-                            }
-                            final int? edad = int.tryParse(value);
-                            if (edad != null && (edad < 1 || edad > 14)) {
-                              return t.patientValAgeRangeYears;
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 1),
-
-                        if (!widget.isEdadAniosMode)
-                          TextFormField(
-                            controller: _edadMesesController,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: t.patientAgeMonthsLabel,
-                              hintText: t.patientAgeMonthsHint,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(
-                                  color: Color.fromARGB(255, 14, 113, 194),
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.secondary,
-                                  width: 2.0,
-                                ),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.calendar_month,
-                                color: Theme.of(context).colorScheme.onSurface
-                                    .withAlpha((0.7 * 255).round()),
-                              ),
-                              floatingLabelStyle: TextStyle(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                            validator: (value) {
-                              if (!widget.isEdadAniosMode &&
-                                  _edadAniosController.text.isEmpty) {
-                                if (value == null || value.isEmpty) {
-                                  return t.patientValEnterAgeYears;
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return null;
                                 }
-                                if (int.tryParse(value) == null) {
+                                final peso = parseDecimal(value);
+                                if (peso == null) {
                                   return t.patientValInvalidNumber;
                                 }
-                                final int? edad = int.tryParse(value);
-                                if (edad != null && (edad < 1 || edad > 11)) {
-                                  return t.patientValAgeMonthsRange;
+                                if (!rangoPesoAnios.contiene(peso)) {
+                                  return t.patientValWeightRange(
+                                    rangoPesoAnios.minTexto,
+                                    rangoPesoAnios.maxTexto,
+                                  );
                                 }
-                              }
-                              return null;
-                            },
-                          ),
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 12),
 
-                        if (_mostrarPesoEstimadoPrincipal)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 20),
-                              RichText(
-                                text: TextSpan(
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                  children: [
-                                    TextSpan(
-                                      text: '${t.patientEstimatedWeightLabel} ',
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                    TextSpan(
-                                      text:
-                                          '${_pesoEstimadoValue!.toStringAsFixed(1)} Kg',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium!
-                                          .copyWith(
-                                            color: const Color.fromARGB(
-                                              255,
-                                              83,
-                                              232,
-                                              103,
-                                            ),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ],
-                                ),
+                            // Edad (opcional)
+                            TextFormField(
+                              key: const ValueKey('campo-edad'),
+                              controller: _edadAniosController,
+                              focusNode: _edadFocus,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(2),
+                              ],
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _calcularDosis(t),
+                              decoration: _decoracion(
+                                label: t.pdAgeYearsLabel,
+                                hint: t.patientAgeYearsHint,
+                                helper: t.pdAgeYearsHelper,
+                                icon: Icons.cake_outlined,
                               ),
-                            ],
-                          ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return null;
+                                }
+                                final edad = int.tryParse(value.trim());
+                                if (edad == null || edad < 1 || edad > 14) {
+                                  return t.patientValAgeRangeYears;
+                                }
+                                return null;
+                              },
+                            ),
 
-                        const SizedBox(height: 10),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: _pesoSourceChip(context, t),
+                            const SizedBox(height: 16),
+                            _pesoResumen(t),
+                          ],
                         ),
-                        const SizedBox(height: 30),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                ElevatedButton.icon(
-                  onPressed: () => _calcularDosis(t),
-                  icon: const Icon(Icons.arrow_forward),
-                  label: Text(
-                    _labelBoton(t),
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 233, 247, 239),
-                    foregroundColor: const Color.fromARGB(255, 14, 113, 194),
-
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 15,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      side: const BorderSide(
-                        color: Color(0xFFB7E4C7), // ✅ borde
-                        width: 1.5, // opcional (1–2 se ve muy bien)
                       ),
-                    ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        key: const ValueKey('btn-calcular'),
+                        onPressed: () => _calcularDosis(t),
+                        icon: const Icon(Icons.calculate_outlined),
+                        label: Text(
+                          _labelBoton(t),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 17),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppUI.primaryBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
-
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const EdadSelectionScreen(),
-              ),
-            );
-          } else if (index == 1) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const InstruccionesScreenWithTerms(),
-              ),
-            );
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Paciente'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.info_outline),
-            label: 'Instrucciones',
-          ),
-        ],
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        selectedItemColor: const Color.fromARGB(255, 14, 113, 194),
-        unselectedItemColor: const Color.fromARGB(255, 14, 113, 194),
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-
-  Widget _pesoSourceChip(BuildContext context, AppLocalizations t) {
-    final bool usaPesoReal = _tienePesoValido;
-    final bool usaEstimado =
-        widget.isEdadAniosMode && !usaPesoReal && _pesoEstimadoValue != null;
-
-    if (!usaPesoReal && !usaEstimado) return const SizedBox.shrink();
-
-    if (usaPesoReal) {
-      return Chip(
-        label: Text(t.patientChipRealWeight),
-        visualDensity: VisualDensity.compact,
-        backgroundColor: const Color(0xFFE9F7EF),
-        side: const BorderSide(color: Color(0xFFB7E4C7)),
-        labelStyle: const TextStyle(
-          color: Color(0xFF1B5E20),
-          fontWeight: FontWeight.w600,
-        ),
-      );
-    }
-
-    return Chip(
-      label: Text(t.patientChipEstimated),
-      visualDensity: VisualDensity.compact,
-      backgroundColor: const Color(0xFFFFF7E6),
-      side: const BorderSide(color: Color(0xFFFFE0B2)),
-      labelStyle: const TextStyle(
-        color: Color(0xFF8A6D1D),
-        fontWeight: FontWeight.w600,
       ),
     );
   }

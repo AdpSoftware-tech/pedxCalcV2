@@ -9,10 +9,14 @@ import 'package:mi_app/models/medicamento_calculado.dart';
 import 'package:mi_app/screens/printable_patient_data_screen.dart';
 
 import '../l10n/app_localizations.dart';
+import '../utils/calc_messages.dart';
 import '../i18n/med_i18n.dart';
 
 class CalculosJovenesDetailScreen extends StatefulWidget {
   final Paciente paciente;
+
+  /// Para el reporte: peso estimado (true), medido (false) o no se sabe.
+  final bool? esPesoEstimado;
   final Medicamento medicamento;
 
   final double sodioValor;
@@ -25,6 +29,7 @@ class CalculosJovenesDetailScreen extends StatefulWidget {
   const CalculosJovenesDetailScreen({
     super.key,
     required this.paciente,
+    this.esPesoEstimado,
     required this.medicamento,
     required this.sodioValor,
     required this.hco3Valor,
@@ -69,7 +74,13 @@ class _CalculosJovenesDetailScreenState
 
     _dosisList = ['N/A'];
     _displayStringForPrint = 'N/A';
+  }
 
+  // Los textos dependen del idioma (AppLocalizations), que no se puede
+  // consultar en initState; aquí además se actualizan si cambia el idioma.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _buildDoseListForUI();
   }
 
@@ -140,28 +151,49 @@ class _CalculosJovenesDetailScreenState
     if (widget.calculoType == 'Sodio') {
       switch (widget.medicamento.nombre) {
         case 'Déficit de Sodio':
-          displayString = _calculatedDoses['deficit_display'];
+          displayString = CalcMsg.localize(
+            _calculatedDoses['deficit_display'],
+            AppLocalizations.of(context),
+          );
           break;
         case 'Volumen de SG5%':
-          displayString = _calculatedDoses['volumen_display'];
+          displayString = CalcMsg.localize(
+            _calculatedDoses['volumen_display'],
+            AppLocalizations.of(context),
+          );
           break;
         case 'Con SF':
-          displayString = _calculatedDoses['con_sf_display'];
+          displayString = CalcMsg.localize(
+            _calculatedDoses['con_sf_display'],
+            AppLocalizations.of(context),
+          );
           break;
         case 'Velocidad de Infusión':
-          displayString = _calculatedDoses['velocidad_display'];
+          displayString = CalcMsg.localize(
+            _calculatedDoses['velocidad_display'],
+            AppLocalizations.of(context),
+          );
           break;
       }
     } else if (widget.calculoType == 'HCO3') {
       switch (widget.medicamento.nombre) {
         case 'Déficit de HCO3':
-          displayString = _calculatedDoses['deficit_display'];
+          displayString = CalcMsg.localize(
+            _calculatedDoses['deficit_display'],
+            AppLocalizations.of(context),
+          );
           break;
         case 'Volumen de SG5% a diluir déficit de HCO3':
-          displayString = _calculatedDoses['volumen_display'];
+          displayString = CalcMsg.localize(
+            _calculatedDoses['volumen_display'],
+            AppLocalizations.of(context),
+          );
           break;
         case 'Velocidad de Infusión.':
-          displayString = _calculatedDoses['velocidad_display'];
+          displayString = CalcMsg.localize(
+            _calculatedDoses['velocidad_display'],
+            AppLocalizations.of(context),
+          );
           break;
       }
     } else if (widget.calculoType == 'Liquidos IV') {
@@ -371,6 +403,8 @@ class _CalculosJovenesDetailScreenState
                 MaterialPageRoute(
                   builder: (_) => PrintablePatientDataScreen(
                     paciente: widget.paciente,
+                    esPesoEstimado: widget.esPesoEstimado,
+                    esLactante: false,
                     medicamentosCalculados: _getMedicamentosParaImprimir(),
                   ),
                 ),

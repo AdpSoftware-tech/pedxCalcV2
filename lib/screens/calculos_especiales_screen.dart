@@ -7,7 +7,10 @@ import 'package:mi_app/screens/printable_patient_data_screen.dart';
 import 'package:mi_app/models/medicamento_calculado.dart';
 
 import '../l10n/app_localizations.dart';
+import '../utils/calc_messages.dart';
+import '../utils/peso_utils.dart';
 import '../i18n/med_i18n.dart';
+import '../widgets/calc_especial_widgets.dart';
 
 // ====== DATA (IDs + categorías estables) ======
 
@@ -123,7 +126,14 @@ final List<Medicamento> liquidosIVMedicamentos = [
 class CalculosEspecialesScreen extends StatefulWidget {
   final Paciente paciente;
 
-  const CalculosEspecialesScreen({super.key, required this.paciente});
+  /// Para el reporte: peso estimado (true), medido (false) o no se sabe.
+  final bool? esPesoEstimado;
+
+  const CalculosEspecialesScreen({
+    super.key,
+    required this.paciente,
+    this.esPesoEstimado,
+  });
 
   @override
   State<CalculosEspecialesScreen> createState() =>
@@ -131,42 +141,41 @@ class CalculosEspecialesScreen extends StatefulWidget {
 }
 
 class _CalculosEspecialesScreenState extends State<CalculosEspecialesScreen> {
-  static const Color _primaryBlue = Color.fromARGB(255, 14, 113, 194);
-  static const Color _green = Color.fromARGB(255, 83, 232, 103);
-  static const Color _tileBg = Color(0xFFF6F3FB);
-
   final TextEditingController _porcentajeController = TextEditingController();
   final TextEditingController _hco3Controller = TextEditingController();
   final TextEditingController _sodioController = TextEditingController();
 
-  // Defaults (tuyos)
-  double _porcentaje = 40;
-  double _hco3Valor = 7;
-  double _sodioValor = 100;
+  /// Porcentaje de requerimientos por defecto.
+  static const double _porcentajeInicial = 40;
+
+  double _porcentaje = _porcentajeInicial;
+
+  // Sodio y HCO3 empiezan vacíos (0 = sin dato): nunca se muestran
+  // déficits de un análisis que nadie ha ingresado.
+  double _hco3Valor = 0;
+  double _sodioValor = 0;
 
   @override
   void initState() {
     super.initState();
 
-    _porcentajeController.text = _porcentaje.toString();
-    _hco3Controller.text = _hco3Valor.toString();
-    _sodioController.text = _sodioValor.toString();
+    _porcentajeController.text = _fmtPct(_porcentaje);
 
     _porcentajeController.addListener(() {
       setState(() {
-        _porcentaje = double.tryParse(_porcentajeController.text) ?? 0.0;
+        _porcentaje = parseDecimal(_porcentajeController.text) ?? 0.0;
       });
     });
 
     _hco3Controller.addListener(() {
       setState(() {
-        _hco3Valor = double.tryParse(_hco3Controller.text) ?? 0.0;
+        _hco3Valor = parseDecimal(_hco3Controller.text) ?? 0.0;
       });
     });
 
     _sodioController.addListener(() {
       setState(() {
-        _sodioValor = double.tryParse(_sodioController.text) ?? 0.0;
+        _sodioValor = parseDecimal(_sodioController.text) ?? 0.0;
       });
     });
   }
@@ -189,11 +198,20 @@ class _CalculosEspecialesScreenState extends State<CalculosEspecialesScreen> {
 
     switch (medicamento.nombre) {
       case 'Déficit de HCO3':
-        return (hco3Doses['deficit_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          hco3Doses['deficit_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       case 'Volumen de SG5%':
-        return (hco3Doses['volumen_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          hco3Doses['volumen_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       case 'Velocidad de Infusión a pasar en 3h':
-        return (hco3Doses['velocidad_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          hco3Doses['velocidad_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       default:
         return 'N/A';
     }
@@ -207,13 +225,25 @@ class _CalculosEspecialesScreenState extends State<CalculosEspecialesScreen> {
 
     switch (medicamento.nombre) {
       case 'Déficit de Sodio':
-        return (sodioDoses['deficit_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          sodioDoses['deficit_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       case 'Volumen de SG5%':
-        return (sodioDoses['volumen_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          sodioDoses['volumen_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       case 'Velocidad de Infusión a pasar en 3h':
-        return (sodioDoses['velocidad_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          sodioDoses['velocidad_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       case 'Con SF':
-        return (sodioDoses['con_sf_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          sodioDoses['con_sf_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       default:
         return 'N/A';
     }
@@ -233,27 +263,6 @@ class _CalculosEspecialesScreenState extends State<CalculosEspecialesScreen> {
 
     final double ml = (calculatedDoses['ml'] as double?) ?? 0.0;
     return '${DosisCalculatorMeses.formatDosis(ml)} ml';
-  }
-
-  // ====== “badge” de unidad ======
-
-  Map<String, String> _splitValueAndUnit(String raw) {
-    final v = raw.trim();
-    if (v.isEmpty) return {'value': 'N/A', 'unit': ''};
-    if (v.toUpperCase() == 'N/A') return {'value': 'N/A', 'unit': ''};
-
-    final candidates = ['ml/h', 'mEq/L', '%', 'cc', 'ml', 'mg', 'J'];
-
-    for (final u in candidates) {
-      final idx = v.toLowerCase().lastIndexOf(u.toLowerCase());
-      if (idx != -1) {
-        final valuePart = v.substring(0, idx).trim();
-        final unitPart = v.substring(idx).trim();
-        return {'value': valuePart.isEmpty ? v : valuePart, 'unit': unitPart};
-      }
-    }
-
-    return {'value': v, 'unit': ''};
   }
 
   bool _isTotalRow(Medicamento med) {
@@ -296,269 +305,87 @@ class _CalculosEspecialesScreenState extends State<CalculosEspecialesScreen> {
     return list;
   }
 
-  // ====== UI HELPERS ======
+  // ====== UI ======
 
-  Widget _sectionTitle(String text) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
-      child: Text(
-        text,
-        style: Theme.of(context).textTheme.titleLarge!.copyWith(
-          fontWeight: FontWeight.w900,
-          color: _primaryBlue,
-          fontSize: 18,
+  static String _fmtPct(double v) =>
+      v == v.roundToDouble() ? v.toInt().toString() : v.toString();
+
+  /// Títulos claros y traducidos para las filas (los nombres de datos se
+  /// mantienen porque la lógica de cálculo depende de ellos).
+  String _titulo(Medicamento med, AppLocalizations t) {
+    switch (med.id) {
+      case 'iv_sol_mixta':
+        return t.specIvMixedSolution;
+      case 'iv_goteo':
+        return t.specIvDrip;
+      case 'iv_resultado':
+        return t.specialCalcTotalLabel;
+      case 'iv_goteo_aj':
+        return t.specIvDripAdjusted;
+      case 'hco3_deficit':
+        return t.specHco3Deficit;
+      case 'hco3_vol_sg5':
+        return t.specHco3Sg5Volume;
+      case 'hco3_vel_3h':
+      case 'na_vel_3h':
+        return t.calcRate3h;
+      case 'na_deficit':
+        return t.specNaDeficit;
+      case 'na_vol_sg5':
+        return t.specNaSg5Volume;
+      case 'na_con_sf':
+        return t.specNaWithNs;
+      default:
+        return MedI18n.name(med, t);
+    }
+  }
+
+  /// Limpia sodio y HCO3 y devuelve el porcentaje a su valor inicial.
+  void _limpiar() {
+    setState(() {
+      _porcentajeController.text = _fmtPct(_porcentajeInicial);
+      _hco3Controller.clear();
+      _sodioController.clear();
+    });
+  }
+
+  void _abrirDetalle(Medicamento med, {double? hco3, double? sodio}) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LiquidIVDetailScreen(
+          medicamento: med,
+          paciente: widget.paciente,
+          esPesoEstimado: widget.esPesoEstimado,
+          porcentajeLiquidos: (hco3 == null && sodio == null)
+              ? _porcentaje
+              : 0.0,
+          hco3Valor: hco3,
+          sodioValor: sodio,
         ),
       ),
     );
   }
 
   Widget _patientHeader(AppLocalizations t) {
+    final meses = widget.paciente.edadMeses;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-      child: Text(
-        '${t.patientHeaderPrefix}: ${widget.paciente.pesoKg.toStringAsFixed(1)} kg · ${widget.paciente.edadMeses} ${t.patientHeaderMonthsUnit}',
-        style: const TextStyle(
-          fontWeight: FontWeight.w900,
-          color: Colors.black54,
-        ),
-      ),
-    );
-  }
-
-  Widget _infoCard({required String text}) {
-    if (text.trim().isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEAF3FF),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _primaryBlue.withAlpha((0.25 * 255).round()),
-          ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(Icons.info_outline, color: _primaryBlue),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                text,
-                style: const TextStyle(color: Colors.black87, fontSize: 13),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      child: Row(
+        children: [
+          const Icon(Icons.person, size: 20, color: Color(0xFF5B6B78)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              '${t.patientHeaderPrefix}: ${widget.paciente.pesoKg.toStringAsFixed(1)} kg · ${meses > 0 ? '$meses ${t.patientHeaderMonthsUnit}' : t.commonNA}',
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF5B6B78),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _inputRow({
-    required String title,
-    required TextEditingController controller,
-    required String hint,
-    required String helper,
-    required String unitBadge,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF333333),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      helper,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black54,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              if (unitBadge.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _primaryBlue.withAlpha((0.10 * 255).round()),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: _primaryBlue.withAlpha((0.25 * 255).round()),
-                    ),
-                  ),
-                  child: Text(
-                    unitBadge,
-                    style: const TextStyle(
-                      color: _primaryBlue,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              const SizedBox(width: 10),
-              SizedBox(
-                width: 90,
-                child: TextField(
-                  controller: controller,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: _primaryBlue,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 16,
-                  ),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: hint,
-                    filled: true,
-                    fillColor: const Color(0xFFF5F7FA),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 10,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: _primaryBlue.withAlpha((0.25 * 255).round()),
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: _green, width: 2),
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
-        ),
+        ],
       ),
     );
-  }
-
-  Widget _resultTile({
-    required AppLocalizations t,
-    required String totalLabelText,
-    required Medicamento medicamento,
-    required String rawValue,
-    required VoidCallback onTap,
-    bool isTotal = false,
-  }) {
-    final parts = _splitValueAndUnit(rawValue);
-    final value = parts['value'] ?? rawValue;
-    final unit = parts['unit'] ?? '';
-
-    final bg = isTotal ? const Color(0xFFEAF3FF) : _tileBg;
-    final border = isTotal
-        ? _primaryBlue.withAlpha((0.35 * 255).round())
-        : Colors.transparent;
-
-    // ✅ UI traducida sin romper la lógica
-    final title = isTotal ? totalLabelText : MedI18n.name(medicamento, t);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-      child: Material(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          splashColor: _primaryBlue.withAlpha((0.12 * 255).round()),
-          onTap: onTap,
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: border),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: _green,
-                    fontSize: 16,
-                  ),
-                ),
-                if (unit.isNotEmpty) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _green.withAlpha((0.12 * 255).round()),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: _green.withAlpha((0.30 * 255).round()),
-                      ),
-                    ),
-                    child: Text(
-                      unit,
-                      style: const TextStyle(
-                        color: Color(0xFF1B5E20),
-                        fontWeight: FontWeight.w900,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(width: 8),
-                const Icon(Icons.chevron_right, color: _primaryBlue),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _resetDefaults() {
-    setState(() {
-      _porcentaje = 40;
-      _hco3Valor = 7;
-      _sodioValor = 100;
-
-      _porcentajeController.text = _porcentaje.toString();
-      _hco3Controller.text = _hco3Valor.toString();
-      _sodioController.text = _sodioValor.toString();
-    });
   }
 
   // ====== BUILD ======
@@ -574,9 +401,9 @@ class _CalculosEspecialesScreenState extends State<CalculosEspecialesScreen> {
           title: Text(t.specialCalcMonthsTitle),
           actions: [
             IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: t.restoreValues,
-              onPressed: _resetDefaults,
+              icon: const Icon(Icons.cleaning_services_outlined),
+              tooltip: t.calcClearTooltip,
+              onPressed: _limpiar,
             ),
             IconButton(
               icon: const Icon(Icons.print),
@@ -588,6 +415,8 @@ class _CalculosEspecialesScreenState extends State<CalculosEspecialesScreen> {
                   MaterialPageRoute(
                     builder: (context) => PrintablePatientDataScreen(
                       paciente: widget.paciente,
+                      esPesoEstimado: widget.esPesoEstimado,
+                      esLactante: true,
                       medicamentosCalculados: meds,
                     ),
                   ),
@@ -596,129 +425,80 @@ class _CalculosEspecialesScreenState extends State<CalculosEspecialesScreen> {
             ),
           ],
         ),
-        body: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: _infoCard(text: t.accordion4Body), // ✅ tu texto i18n
-            ),
-            SliverToBoxAdapter(child: _patientHeader(t)),
+        body: ListView(
+          padding: const EdgeInsets.only(bottom: 24),
+          children: [
+            CalcInfoBanner(t.accordion4Body),
+            _patientHeader(t),
 
-            // INPUTS
-            SliverToBoxAdapter(
-              child: _inputRow(
-                title: t.inputLiquidsPercentTitle,
-                controller: _porcentajeController,
-                hint: '40',
-                helper: t.inputLiquidsPercentHelper,
-                unitBadge: '%',
-              ),
-            ),
-
-            SliverToBoxAdapter(
-              child: _inputRow(
-                title: t.inputHco3Title,
-                controller: _hco3Controller,
-                hint: '7',
-                helper: t.inputHco3Helper,
-                unitBadge: 'mEq/L',
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: _inputRow(
-                title: t.inputSodiumTitle,
-                controller: _sodioController,
-                hint: '100',
-                helper: t.inputSodiumHelper,
-                unitBadge: 'mEq/L',
-              ),
-            ),
-
-            // LÍQUIDOS IV
-            SliverToBoxAdapter(child: _sectionTitle(t.sectionLiquidsIV)),
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final med = liquidosIVMedicamentos[index];
-                final display = _getLiquidosIvDisplay(med);
-                final isTotal = _isTotalRow(med);
-
-                return _resultTile(
-                  t: t,
-                  totalLabelText: t.resultTotalFinal,
-                  medicamento: med,
-                  rawValue: display,
-                  isTotal: isTotal,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => LiquidIVDetailScreen(
-                          medicamento: med,
-                          paciente: widget.paciente,
-                          porcentajeLiquidos: _porcentaje,
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }, childCount: liquidosIVMedicamentos.length),
+            // ---- Los 3 datos juntos, para llenarlos rápido
+            CalcSeccionCard(
+              titulo: t.calcInputsTitle,
+              icono: Icons.edit_note,
+              children: [
+                CalcInputField(
+                  fieldKey: const ValueKey('input-porcentaje'),
+                  etiqueta: t.calcPercentLabel,
+                  controller: _porcentajeController,
+                  unidad: '%',
+                ),
+                CalcNota(t.calcPercentGuide),
+                CalcInputField(
+                  fieldKey: const ValueKey('input-sodio'),
+                  etiqueta: t.calcSodiumLabel,
+                  controller: _sodioController,
+                  unidad: 'mEq/L',
+                  hint: '—',
+                ),
+                CalcInputField(
+                  fieldKey: const ValueKey('input-hco3'),
+                  etiqueta: t.calcHco3Label,
+                  controller: _hco3Controller,
+                  unidad: 'mEq/L',
+                  hint: '—',
+                  ultimo: true,
+                ),
+              ],
             ),
 
-            // HCO3
-            SliverToBoxAdapter(child: _sectionTitle(t.sectionHco3)),
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final med = hco3Medicamentos[index + 1];
-                final display = _getHco3Display(med);
-
-                return _resultTile(
-                  t: t,
-                  totalLabelText: t.resultTotalFinal,
-                  medicamento: med,
-                  rawValue: display,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => LiquidIVDetailScreen(
-                          paciente: widget.paciente,
-                          medicamento: med,
-                          porcentajeLiquidos: 0.0,
-                          hco3Valor: _hco3Valor,
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }, childCount: hco3Medicamentos.length - 1),
+            // ---- Resultados
+            CalcSeccionCard(
+              titulo: t.sectionLiquidsIV,
+              icono: Icons.water_drop_outlined,
+              children: [
+                for (final med in liquidosIVMedicamentos)
+                  CalcResultRow(
+                    titulo: _titulo(med, t),
+                    valorCrudo: _getLiquidosIvDisplay(med),
+                    destacado: _isTotalRow(med),
+                    onTap: () => _abrirDetalle(med),
+                  ),
+              ],
             ),
-
-            // SODIO
-            SliverToBoxAdapter(child: _sectionTitle(t.sectionSodium)),
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                final med = sodioMedicamentos[index + 1];
-                final display = _getSodioDisplay(med);
-
-                return _resultTile(
-                  t: t,
-                  totalLabelText: t.resultTotalFinal,
-                  medicamento: med,
-                  rawValue: display,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => LiquidIVDetailScreen(
-                          paciente: widget.paciente,
-                          medicamento: med,
-                          porcentajeLiquidos: 0.0,
-                          sodioValor: _sodioValor,
-                        ),
-                      ),
-                    );
-                  },
-                );
-              }, childCount: sodioMedicamentos.length - 1),
+            CalcSeccionCard(
+              titulo: t.sectionSodium,
+              icono: Icons.science_outlined,
+              children: [
+                for (final med in sodioMedicamentos.skip(1))
+                  CalcResultRow(
+                    titulo: _titulo(med, t),
+                    valorCrudo: _getSodioDisplay(med),
+                    onTap: () => _abrirDetalle(med, sodio: _sodioValor),
+                  ),
+              ],
             ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            CalcSeccionCard(
+              titulo: t.sectionHco3,
+              icono: Icons.biotech_outlined,
+              children: [
+                for (final med in hco3Medicamentos.skip(1))
+                  CalcResultRow(
+                    titulo: _titulo(med, t),
+                    valorCrudo: _getHco3Display(med),
+                    onTap: () => _abrirDetalle(med, hco3: _hco3Valor),
+                  ),
+              ],
+            ),
           ],
         ),
       ),

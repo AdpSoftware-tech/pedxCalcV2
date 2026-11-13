@@ -1,10 +1,20 @@
 import 'dart:math';
 
+import 'calc_messages.dart';
+
 class DosisCalculatorJovenes {
   static Map<String, String> calculateLiquidosIvDosis(
     double pesoKg,
     double porcentaje,
   ) {
+    if (pesoKg <= 0 || porcentaje <= 0) {
+      return {
+        'solucion_mixta': 'N/A',
+        'resultado': 'N/A',
+        'goteo_ml_h': 'N/A',
+        'goteo_ml_h_ajustado': 'N/A',
+      };
+    }
     double requerimientoTotal = 0.0;
     if (pesoKg < 10) {
       requerimientoTotal = pesoKg * 100;
@@ -39,6 +49,23 @@ class DosisCalculatorJovenes {
     const double factor = 4;
     const double mil = 1000;
 
+    if (sodioDelPaciente <= 0 || peso <= 0) {
+      return {
+        'deficit_display': CalcMsg.needSodium,
+        'volumen_display': 'N/A',
+        'velocidad_display': 'N/A',
+        'con_sf_display': 'N/A',
+      };
+    }
+    if (sodioDelPaciente >= 130) {
+      return {
+        'deficit_display': CalcMsg.noSodiumDeficit,
+        'volumen_display': 'N/A',
+        'velocidad_display': 'N/A',
+        'con_sf_display': 'N/A',
+      };
+    }
+
     // Déficit de Sodio
     double deficitSodio =
         ((130 - sodioDelPaciente) * peso * constante) / factor;
@@ -57,10 +84,10 @@ class DosisCalculatorJovenes {
     conSF = _roundDouble(conSF, 0);
 
     return {
-      'deficit_display': 'Déficit: ${deficitSodio.toStringAsFixed(1)} ml',
-      'volumen_display': 'Volumen: ${volumenSG5.toStringAsFixed(1)} ml',
-      'velocidad_display': 'Velocidad: ${dosisEntera.toString()} ml/h',
-      'con_sf_display': 'Con SF: ${conSF.toStringAsFixed(0)} ml',
+      'deficit_display': '${deficitSodio.toStringAsFixed(1)} ml',
+      'volumen_display': '${volumenSG5.toStringAsFixed(1)} ml',
+      'velocidad_display': '$dosisEntera ml/h',
+      'con_sf_display': '${conSF.toStringAsFixed(0)} ml',
     };
   }
 
@@ -69,6 +96,21 @@ class DosisCalculatorJovenes {
     double hco3DelPaciente,
   ) {
     const double constante = 0.5;
+
+    if (hco3DelPaciente <= 0 || peso <= 0) {
+      return {
+        'deficit_display': CalcMsg.needHco3,
+        'volumen_display': 'N/A',
+        'velocidad_display': 'N/A',
+      };
+    }
+    if (hco3DelPaciente >= 15) {
+      return {
+        'deficit_display': CalcMsg.noHco3Deficit,
+        'volumen_display': 'N/A',
+        'velocidad_display': 'N/A',
+      };
+    }
 
     double deficitHco3 = (15 - hco3DelPaciente) * peso * constante;
     deficitHco3 = _roundDouble(deficitHco3, 1);
@@ -80,10 +122,9 @@ class DosisCalculatorJovenes {
     velocidadInfusion = _roundDouble(velocidadInfusion, 1);
 
     return {
-      'deficit_display': 'Déficit: ${deficitHco3.toStringAsFixed(1)} ml',
-      'volumen_display': 'Volumen: ${volumenSG5.toStringAsFixed(1)} ml',
-      'velocidad_display':
-          'Velocidad: ${velocidadInfusion.toStringAsFixed(1)} ml/h',
+      'deficit_display': '${deficitHco3.toStringAsFixed(1)} ml',
+      'volumen_display': '${volumenSG5.toStringAsFixed(1)} ml',
+      'velocidad_display': '${velocidadInfusion.toStringAsFixed(1)} ml/h',
     };
   }
 }

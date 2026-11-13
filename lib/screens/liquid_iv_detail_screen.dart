@@ -7,10 +7,14 @@ import 'package:mi_app/screens/printable_patient_data_screen.dart';
 import 'package:mi_app/models/medicamento_calculado.dart';
 
 import '../l10n/app_localizations.dart';
+import '../utils/calc_messages.dart';
 import '../i18n/med_i18n.dart'; // ✅ NUEVO
 
 class LiquidIVDetailScreen extends StatefulWidget {
   final Paciente paciente;
+
+  /// Para el reporte: peso estimado (true), medido (false) o no se sabe.
+  final bool? esPesoEstimado;
   final Medicamento medicamento;
   final double porcentajeLiquidos;
   final double? sodioValor;
@@ -19,6 +23,7 @@ class LiquidIVDetailScreen extends StatefulWidget {
   const LiquidIVDetailScreen({
     super.key,
     required this.paciente,
+    this.esPesoEstimado,
     required this.medicamento,
     required this.porcentajeLiquidos,
     this.hco3Valor,
@@ -92,7 +97,13 @@ class _LiquidIVDetailScreenState extends State<LiquidIVDetailScreen> {
     } else {
       _calculateAndFormatDoses();
     }
+  }
 
+  // Los textos dependen del idioma (AppLocalizations), que no se puede
+  // consultar en initState; aquí además se actualizan si cambia el idioma.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _buildDoseListForUI();
   }
 
@@ -210,16 +221,25 @@ class _LiquidIVDetailScreenState extends State<LiquidIVDetailScreen> {
       if (_hco3Doses == null) return 'N/A';
 
       if (nombre.contains('déficit') || nombre.contains('deficit')) {
-        return (_hco3Doses!['deficit_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          _hco3Doses!['deficit_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       }
 
       if (nombre.contains('volumen')) {
-        return (_hco3Doses!['volumen_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          _hco3Doses!['volumen_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       }
 
       // ✅ aquí estaba el fallo por mayúsculas / textos distintos
       if (nombre.contains('velocidad')) {
-        return (_hco3Doses!['velocidad_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          _hco3Doses!['velocidad_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       }
 
       return 'N/A';
@@ -229,19 +249,31 @@ class _LiquidIVDetailScreenState extends State<LiquidIVDetailScreen> {
       if (_sodioDoses == null) return 'N/A';
 
       if (nombre.contains('déficit') || nombre.contains('deficit')) {
-        return (_sodioDoses!['deficit_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          _sodioDoses!['deficit_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       }
 
       if (nombre.contains('volumen')) {
-        return (_sodioDoses!['volumen_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          _sodioDoses!['volumen_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       }
 
       if (nombre.contains('velocidad')) {
-        return (_sodioDoses!['velocidad_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          _sodioDoses!['velocidad_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       }
 
       if (nombre.contains('con sf') || nombre == 'con sf') {
-        return (_sodioDoses!['con_sf_display'] ?? 'N/A').toString();
+        return CalcMsg.localize(
+          _sodioDoses!['con_sf_display']?.toString(),
+          AppLocalizations.of(context),
+        );
       }
 
       return 'N/A';
@@ -506,6 +538,8 @@ class _LiquidIVDetailScreenState extends State<LiquidIVDetailScreen> {
                 MaterialPageRoute(
                   builder: (_) => PrintablePatientDataScreen(
                     paciente: widget.paciente,
+                    esPesoEstimado: widget.esPesoEstimado,
+                    esLactante: true,
                     medicamentosCalculados: [medCalc],
                   ),
                 ),

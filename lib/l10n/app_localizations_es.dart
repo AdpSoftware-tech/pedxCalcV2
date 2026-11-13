@@ -31,7 +31,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get quickSummaryBody =>
-      '• Se recomienda poner el peso si está disponible.\n• Si se desconoce el peso Pedx estima el peso según la edad de forma automática.\n• Verifica siempre las dosis con protocolo/guía local antes de administrar.\n• Estos cálculos son aplicables para la población de 1 mes a 18 años.';
+      '• Se recomienda poner el peso si está disponible.\n• Si se desconoce el peso Pedx estima el peso según la edad de forma automática.\n• Verifica siempre las dosis con protocolo/guía local antes de administrar.\n• Estos cálculos son aplicables para la población de 1 mes a 14 años.';
 
   @override
   String get termsAccept => 'He leído y acepto los términos y condiciones.';
@@ -147,10 +147,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ageSelectTitle => 'Seleccionar tipo de edad';
 
   @override
-  String get ageSelectQuestion => '¿Cual es el rango de edad del paciente?';
+  String get ageSelectQuestion => '¿Cuál es el rango de edad del paciente?';
 
   @override
-  String get ageYearsTitle => 'Mayor a 1 año';
+  String get ageYearsTitle => '1 año o más';
 
   @override
   String get ageYearsSubtitle =>
@@ -158,13 +158,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get ageSelectNote =>
-      'Sino tienes el peso se puede estimar usando solo la edad.';
+      'Si no tienes el peso, se puede estimar usando solo la edad.';
 
   @override
   String get commonBadge => 'Más común';
 
   @override
-  String get ageMonthsTitle => 'Menor a 1 año';
+  String get ageMonthsTitle => 'Menos de 1 año';
 
   @override
   String get ageMonthsSubtitle =>
@@ -315,7 +315,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get medsBottomPAM => 'PAM';
 
   @override
-  String patientHeaderSummaryYears(Object age, Object weight) {
+  String patientHeaderSummaryYears(Object weight, Object age) {
     return '$weight kg · $age años';
   }
 
@@ -607,7 +607,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get inputSodiumHelper => 'Ingresa Na actual.';
 
   @override
-  String get sectionLiquidsIV => 'Líquids IV';
+  String get sectionLiquidsIV => 'Líquidos IV';
 
   @override
   String get sectionHco3 => 'Reposición de HCO3';
@@ -800,16 +800,16 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get o2AppBarTitle => 'Saturación de oxígeno (SpO₂)';
+  String get o2AppBarTitle => 'Saturación de oxígeno (SpO2)';
 
   @override
-  String get o2CardTitle => 'Saturación de oxígeno (SpO₂)';
+  String get o2CardTitle => 'Saturación de oxígeno (SpO2)';
 
   @override
-  String get o2Paragraph1 => 'SpO₂ es menor en el período neonatal inmediato.';
+  String get o2Paragraph1 => 'SpO2 es menor en el período neonatal inmediato.';
 
   @override
-  String get o2Paragraph2Part1 => 'Más allá de este período, una SpO₂ de ';
+  String get o2Paragraph2Part1 => 'Más allá de este período, una SpO2 de ';
 
   @override
   String get o2ThresholdBold => '<90–92%';
@@ -1311,14 +1311,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get specNaInfusionRate => 'Velocidad de infusión';
 
   @override
-  String get specHco3Patient => 'HCO₃ del paciente';
+  String get specHco3Patient => 'HCO3 del paciente';
 
   @override
-  String get specHco3Deficit => 'Déficit de HCO₃';
+  String get specHco3Deficit => 'Déficit de HCO3';
 
   @override
   String get specHco3Sg5Volume =>
-      'Volumen de SG 5% para diluir déficit de HCO₃';
+      'Volumen de SG 5% para diluir déficit de HCO3';
 
   @override
   String get specHco3InfusionRate => 'Velocidad de infusión';
@@ -2257,4 +2257,262 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get medPleuralDrainCatheterNotes => 'Adolescente 14-36F';
+
+  @override
+  String patientValWeightRange(String min, String max) {
+    return 'El peso debe estar entre $min y $max kg. Revise el valor ingresado.';
+  }
+
+  @override
+  String get calcNeedSodium => 'Ingresa el sodio del paciente';
+
+  @override
+  String get calcNeedHco3 => 'Ingresa el HCO3 del paciente';
+
+  @override
+  String get calcNoSodiumDeficit => 'Sin déficit (Na ≥ 130 mEq/L)';
+
+  @override
+  String get calcNoHco3Deficit => 'Sin déficit (HCO3 ≥ 15 mEq/L)';
+
+  @override
+  String get termsPdfTitle => 'Términos y Condiciones';
+
+  @override
+  String get termsPdfNotAvailable =>
+      'El documento de Términos y Condiciones no está disponible en este momento.';
+
+  @override
+  String get termsButton => 'Términos';
+
+  @override
+  String get securityButton => 'Seguridad';
+
+  @override
+  String get tabCardiacArrest => 'Paro cardíaco';
+
+  @override
+  String get tabIntubation => 'Intubación';
+
+  @override
+  String get tabRespiratory => 'Respiratorio';
+
+  @override
+  String get tabCardiovascular => 'Cardiovascular';
+
+  @override
+  String get tabAnaphylaxis => 'Anafilaxia';
+
+  @override
+  String get tabShock => 'Shock';
+
+  @override
+  String get tabElectrolytes => 'Electrolitos';
+
+  @override
+  String get tabAnalgesiaFever => 'Analgesia/fiebre';
+
+  @override
+  String get tabOther => 'Otros';
+
+  @override
+  String get favAdd => 'Agregar a favoritos';
+
+  @override
+  String get favRemove => 'Quitar de favoritos';
+
+  @override
+  String get favEmpty =>
+      'Aún no tienes favoritos. Toca la estrella ☆ de un medicamento para agregarlo.';
+
+  @override
+  String get languageDialogTitle => 'Seleccionar idioma';
+
+  @override
+  String get languageSwitchTooltip => 'Cambiar idioma';
+
+  @override
+  String get securityPlaceholderBody =>
+      'Información sobre seguridad de la aplicación.';
+
+  @override
+  String get calcNeedAge => 'Requiere la edad';
+
+  @override
+  String get pdMonthsTitle => 'Ingresa los datos (1–11 meses)';
+
+  @override
+  String get pdMonthsHowBody =>
+      '• Puedes calcular con el peso, con la edad o con ambos.\n• Si solo ingresas la edad, usamos un peso estimado.\n• La edad se necesita para calcular el tubo endotraqueal (TET).\n• Confirma el peso real lo antes posible.';
+
+  @override
+  String get pdAgeMonthsLabel => 'Edad (meses)';
+
+  @override
+  String get pdAgeMonthsHelper => 'Opcional · de 1 a 11 meses';
+
+  @override
+  String get pdWeightLabel => 'Peso (kg)';
+
+  @override
+  String get pdWeightHelperOptional =>
+      'Opcional · si no lo tienes, se estima por la edad';
+
+  @override
+  String pdEstimatedWeight(String peso) {
+    return 'Peso estimado: $peso kg';
+  }
+
+  @override
+  String pdRealWeight(String peso) {
+    return 'Peso real: $peso kg';
+  }
+
+  @override
+  String get pdNoAgeTetWarning =>
+      'Sin la edad no se calcula el tubo endotraqueal (TET).';
+
+  @override
+  String get pdEstimatedHint => 'Confírmalo con el peso real lo antes posible.';
+
+  @override
+  String get pdYearsTitle => 'Ingresa los datos (1–14 años)';
+
+  @override
+  String get pdYearsHowBody =>
+      '• Puedes calcular con el peso, con la edad o con ambos.\n• Si solo ingresas la edad, usamos un peso estimado.\n• Confirma el peso real lo antes posible.';
+
+  @override
+  String get pdAgeYearsLabel => 'Edad (años)';
+
+  @override
+  String get pdAgeYearsHelper => 'Opcional · de 1 a 14 años';
+
+  @override
+  String get calcRate3h => 'Velocidad de infusión (en 3 h)';
+
+  @override
+  String get calcPercentGuide =>
+      'Guía: riesgo SIADH 80 % · CAF/VMA 60–70 % · LRA + NVO 45 % · LRA + VO 30 %';
+
+  @override
+  String get calcPercentLabel => 'Porcentaje de requerimientos';
+
+  @override
+  String get calcSodiumLabel => 'Sodio del paciente';
+
+  @override
+  String get calcHco3Label => 'HCO3 del paciente';
+
+  @override
+  String get calcClearTooltip => 'Limpiar valores';
+
+  @override
+  String get calcInputsTitle => 'Datos para el cálculo';
+
+  @override
+  String get printPatientAge => 'Edad';
+
+  @override
+  String get printPatientWeight => 'Peso';
+
+  @override
+  String get printPatientGroup => 'Grupo';
+
+  @override
+  String get printPatientAttended => 'Fecha y hora';
+
+  @override
+  String get printGroupInfant => 'Lactante (1–11 meses)';
+
+  @override
+  String get printGroupChild => 'Niño (1–14 años)';
+
+  @override
+  String get printAgeNotEntered => 'No ingresada';
+
+  @override
+  String get printWeightEstimated => 'ESTIMADO por edad';
+
+  @override
+  String get printWeightMeasured => 'medido';
+
+  @override
+  String get printNameLine => 'Nombre';
+
+  @override
+  String get printRecordLine => 'Expediente';
+
+  @override
+  String get printDisclaimer =>
+      'Verifique las dosis con su protocolo local antes de administrar.';
+
+  @override
+  String get vsTitle => 'Signos vitales';
+
+  @override
+  String get vsSubtitle => 'Valores normales según la edad';
+
+  @override
+  String get vsHrSub => 'Latidos por minuto (lpm)';
+
+  @override
+  String get vsRrSub => 'Respiraciones por minuto (rpm)';
+
+  @override
+  String get vsBpSub => 'Sistólica / diastólica (mmHg)';
+
+  @override
+  String get vsTempSub => 'Grados centígrados (°C)';
+
+  @override
+  String get vsO2Sub => 'SpO2 (%)';
+
+  @override
+  String get pamTitle => 'Presión arterial media';
+
+  @override
+  String get pamSubtitle => 'Elige la tabla según el sexo del paciente';
+
+  @override
+  String get pamWomen => 'Mujeres';
+
+  @override
+  String get pamMen => 'Hombres';
+
+  @override
+  String get pamTableSub => 'Tabla de presión arterial por edad';
+
+  @override
+  String get vtPatientRow => 'Paciente';
+
+  @override
+  String get vtCardTitle => 'Rangos normales por edad';
+
+  @override
+  String get pamColMin => 'Mínima';
+
+  @override
+  String get pamColMean => 'Media';
+
+  @override
+  String get pamColMax => 'Máxima';
+
+  @override
+  String get pamRowPam => 'PAM';
+
+  @override
+  String get pamRowSysDia => 'PA sist./diast.';
+
+  @override
+  String get pamCardTitle => 'Valores por edad (mmHg)';
+
+  @override
+  String get aboutTagline => 'Calculadora pediátrica de dosis y signos vitales';
+
+  @override
+  String get aboutVersionLabel => 'Versión';
+
+  @override
+  String get aboutDocuments => 'Documentos';
 }
