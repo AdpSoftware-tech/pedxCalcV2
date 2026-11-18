@@ -2,6 +2,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mi_app/models/paciente.dart';
 import 'package:mi_app/models/medicamento.dart';
+import 'package:mi_app/utils/calc_messages.dart';
 import 'package:mi_app/utils/dosis_calculator_meses.dart';
 
 void main() {
@@ -47,6 +48,41 @@ void main() {
       );
 
       expect((resultado['ml'] as double), closeTo(15.0, 0.0001));
+    });
+  });
+
+  group('sin edad (solo peso)', () {
+    final sinEdad = Paciente(pesoKg: 8, edadAnios: 0, edadMeses: 0);
+    Map<String, dynamic> calc(String nombre) =>
+        DosisCalculatorMeses.calculateDosis(
+          sinEdad,
+          Medicamento(id: '', nombre: nombre, categoria: ''),
+        );
+
+    test('TET y longitud piden la edad en vez de inventar un valor', () {
+      for (final n in [
+        'TET sin balón',
+        'TET con balón',
+        'Longitud inserción a comisura labial',
+      ]) {
+        expect(calc(n)['display_string'], CalcMsg.needAge, reason: n);
+      }
+    });
+
+    test('catéter de lactante sigue siendo 4F', () {
+      expect(calc('Catéter femoral:')['display_string'], '4F');
+    });
+
+    test('dosis por peso se calculan igual', () {
+      expect((calc('Adrenalina IV')['ml'] as double), closeTo(0.8, 1e-9));
+    });
+
+    test('con edad, el TET sí se calcula', () {
+      final r = DosisCalculatorMeses.calculateDosis(
+        Paciente(pesoKg: 8, edadAnios: 0, edadMeses: 6),
+        Medicamento(id: '', nombre: 'TET sin balón', categoria: ''),
+      );
+      expect(r['display_string'], '4.0 mm');
     });
   });
 }

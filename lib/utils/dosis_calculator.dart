@@ -9,6 +9,48 @@ class DosisCalculator {
     return ((value * mod).round().toDouble() / mod);
   }
 
+  /// Medicamentos cuya dosis es solo mg/kg (con tope opcional en mg).
+  /// Sus registros no indican concentración, por lo que no se calcula ml.
+  static const Map<String, (double, double?)> _dosisSoloMg = {
+    'Diazepam IV.': (0.1, 10.0),
+    'Valproato IV': (20.0, 1000.0),
+    'Fenitoína IV.': (20.0, 1000.0),
+    'Clonazepam VO': (0.01, null),
+    'Tiopental': (3.0, 500.0),
+    'Levetirazetam': (30.0, 4500.0),
+    'Fenobarbital.': (20.0, null),
+    'Paracetamol': (15.0, null),
+    'Midazolam IV.': (0.15, null),
+    'Metamizol IV.': (6.0, 1000.0),
+  };
+
+  /// Requerimiento basal diario (Holliday-Segar), en ml/día:
+  /// 100 ml/kg los primeros 10 kg, 50 ml/kg de 10 a 20 kg y 20 ml/kg por encima.
+  static double hollidaySegar(double peso) {
+    if (peso <= 0) return 0.0;
+    if (peso <= 10) return peso * 100;
+    if (peso <= 20) return 1000 + (peso - 10) * 50;
+    return 1500 + (peso - 20) * 20;
+  }
+
+  /// Redondeo según la magnitud de la dosis, para que las dosis pequeñas
+  /// (lactantes) no queden en 0 ni se inflen al redondear a enteros.
+  ///   < 1  → 2 decimales (0.04 ml)
+  ///   < 10 → 1 decimal   (1.5 mg)
+  ///   ≥ 10 → entero      (150 mg)
+  static double _roundDose(double value) {
+    if (value <= 0) return 0.0;
+    if (value < 1) return _roundDouble(value, 2);
+    if (value < 10) return _roundDouble(value, 1);
+    return _roundDouble(value, 0);
+  }
+
+  /// Formatea sin ".0" sobrante (1.0 → "1", 0.25 → "0.25").
+  static String _fmt(double value) {
+    if (value == value.roundToDouble()) return value.toInt().toString();
+    return value.toString();
+  }
+
   static Map<String, dynamic> calculateDosis(
     Paciente paciente,
     Medicamento medicamento,
@@ -48,8 +90,6 @@ class DosisCalculator {
       };
     } else if (medicamento.nombre.trim() == 'Ipratropium neb > 5 años') {
       return {'display_string': '500 ug + 5 mg SBT cada 20 min (3 neb)'};
-    } else if (medicamento.nombre == 'HCO3 del paciente') {
-      return {'display_string': '7'};
     }
     double dosisMg = 0.0;
     double dosisMl = 0.0;
@@ -71,8 +111,9 @@ class DosisCalculator {
           dosisMl = (peso * 0.1).clamp(0.0, 10.0);
           dosisMg = (peso * 0.01).clamp(0.0, 1.0);
         } else if (medicamento.categoria == 'Bradiarritmias') {
-          dosisMl = ((peso * 0.1) * 10).clamp(0.0, 10.0);
-          dosisMg = (peso * 0.1).clamp(0.0, 1.0);
+          // 0,01 mg/kg; dilución 1 ml + 9 ml SF → 0,1 mg/ml. Máx 1 mg = 10 ml.
+          dosisMg = (peso * 0.01).clamp(0.0, 1.0);
+          dosisMl = dosisMg / 0.1;
         } else if (medicamento.categoria == 'Anafilaxia') {
           dosisMl = peso * 0.01;
           dosisMg = 0.0;
@@ -82,8 +123,9 @@ class DosisCalculator {
         }
       } else if (medicamento.nombre == 'Adrenalina ET') {
         if (medicamento.categoria == 'Paro cardiaco') {
-          dosisMl = peso * 1;
+          // Dilución 1 ml + 9 ml SF → 0,1 mg/ml. Máx 1 mg = 10 ml.
           dosisMg = (peso * 0.1).clamp(0.0, 1.0);
+          dosisMl = dosisMg / 0.1;
         } else {
           dosisMl = 0.0;
           dosisMg = 0.0;
@@ -93,7 +135,7 @@ class DosisCalculator {
           dosisMl = 0.0;
           dosisMg = (peso * 0.3);
           dosisJulios = 0.0;
-          dosisMg = _roundDouble(dosisMg, 0);
+          dosisMg = _roundDose(dosisMg);
           return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
         } else {
           dosisMl = 0.0;
@@ -106,8 +148,8 @@ class DosisCalculator {
           } else {
             dosisMl = peso * 0.01;
             dosisMg = 0.0;
-            dosisMl = _roundDouble(dosisMl, 1);
-            dosisMg = _roundDouble(dosisMg, 1);
+            dosisMl = _roundDose(dosisMl);
+            dosisMg = _roundDose(dosisMg);
             return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
           }
         } else {
@@ -123,35 +165,33 @@ class DosisCalculator {
       dosisMg = _roundDouble(dosisMg, 2);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Adenosina primera') {
-      dosisMl = (peso * 0.1).clamp(0.0, 2.0);
-      dosisMg = (peso * 0.1).clamp(0.0, 6.0);
+    } else if (medicamento.nombre == 'Adenosina primera' ||
+        medicamento.nombre == 'Adenosina segunda' ||
+        medicamento.nombre == 'Adenosina tercera') {
+      // Adenosina 3 mg/ml. Máx: 6 mg (2 ml) primera; 12 mg (4 ml) siguientes.
+      const double concentracionMgMl = 3.0;
+      final double mgKg = medicamento.nombre == 'Adenosina primera'
+          ? 0.1
+          : medicamento.nombre == 'Adenosina segunda'
+          ? 0.2
+          : 0.3;
+      final double maxMg = medicamento.nombre == 'Adenosina primera'
+          ? 6.0
+          : 12.0;
 
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMg = (peso * mgKg).clamp(0.0, maxMg);
+      dosisMl = dosisMg / concentracionMgMl;
 
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Adenosina segunda') {
-      dosisMl = (peso * 0.2).clamp(0.0, 4.0);
-      dosisMg = (peso * 0.2).clamp(0.0, 12.0);
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 1);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Adenosina tercera') {
-      dosisMl = (peso * 0.3).clamp(0.0, 4.0);
-      dosisMg = (peso * 0.3).clamp(0.0, 12.0);
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMg = _roundDose(dosisMg);
+      dosisMl = _roundDose(dosisMl);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Rocuronio IV') {
       dosisMl = (peso * 0.5) / 10.0;
       dosisMg = peso * 0.5;
 
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMg = _roundDose(dosisMg);
+      dosisMl = _roundDose(dosisMl);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Pancuronio') {
@@ -160,7 +200,7 @@ class DosisCalculator {
       dosisMg = peso * 0.1;
 
       dosisMg = _roundDouble(dosisMg, 2);
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Succinilcolina') {
@@ -176,13 +216,13 @@ class DosisCalculator {
       dosisMg = peso * 0.4;
 
       dosisMg = _roundDouble(dosisMg, 2);
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Flumazenilo IV') {
       dosisMl = (peso * 0.01) / 0.1;
       dosisMg = peso * 0.01;
-      dosisMg = _roundDouble(dosisMg, 1);
+      dosisMg = _roundDose(dosisMg);
       dosisMl = _roundDouble(dosisMl, 2);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
@@ -190,16 +230,17 @@ class DosisCalculator {
       dosisMl = (peso * 0.01) / 0.4;
       dosisMg = peso * 0.01;
 
-      dosisMg = _roundDouble(dosisMg, 1);
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMg = _roundDose(dosisMg);
+      dosisMl = _roundDose(dosisMl);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Atropina') {
-      dosisMl = (peso * 2.0).clamp(0.0, 10.0);
-      dosisMg = (peso * 0.2).clamp(0.0, 1.0);
+      // 0,02 mg/kg; dilución 2 ml + 8 ml SF → 0,1 mg/ml. Máx 1 mg = 10 ml.
+      dosisMg = (peso * 0.02).clamp(0.0, 1.0);
+      dosisMl = dosisMg / 0.1;
 
-      dosisMg = _roundDouble(dosisMg, 1);
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMg = _roundDose(dosisMg);
+      dosisMl = _roundDose(dosisMl);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Bicarbonato de sodio 1M') {
@@ -224,12 +265,12 @@ class DosisCalculator {
         return {'display_string': 'N/A'};
       }
     } else if (medicamento.nombre == 'Sulfato de magnesio') {
-      dosisMl = (peso * 50.0) / 200.0;
-
+      // 200 mg/ml. Máx 2 g = 10 ml.
       dosisMg = (peso * 50.0).clamp(0.0, 2000.0);
+      dosisMl = dosisMg / 200.0;
 
       dosisMg = _roundDouble(dosisMg, 2);
-      dosisMl = _roundDouble(dosisMl, 0);
+      dosisMl = _roundDose(dosisMl);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Amiodarona') {
@@ -238,133 +279,116 @@ class DosisCalculator {
       dosisMg = (peso * 5.0).clamp(0.0, 300.0);
 
       dosisMg = _roundDouble(dosisMg, 2);
-      dosisMl = _roundDouble(dosisMl, 0);
+      dosisMl = _roundDose(dosisMl);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Midazolam IV') {
-      dosisMl = ((peso * 0.3).clamp(0.0, 15.0)) / 5.0;
+      // 5 mg/ml. Máx 15 mg = 3 ml.
+      dosisMg = (peso * 0.3).clamp(0.0, 15.0);
+      dosisMl = dosisMg / 5.0;
 
-      dosisMg = peso * 0.3;
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMg = _roundDose(dosisMg);
+      dosisMl = _roundDose(dosisMl);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Primera descarga eléctrica') {
       dosisJulios = peso * 2.0;
 
-      dosisJulios = _roundDouble(dosisJulios, 0);
+      dosisJulios = _roundDose(dosisJulios);
 
       return {'mg': 0.0, 'ml': 0.0, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Segunda descarga eléctrica') {
       dosisJulios = peso * 4.0;
 
-      dosisJulios = _roundDouble(dosisJulios, 0);
+      dosisJulios = _roundDose(dosisJulios);
 
       return {'mg': 0.0, 'ml': 0.0, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Descarga máxima') {
       dosisJulios = peso * 10.0;
 
-      dosisJulios = _roundDouble(dosisJulios, 0);
+      dosisJulios = _roundDose(dosisJulios);
 
       return {'mg': 0.0, 'ml': 0.0, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Solución fisiológica') {
       dosisMl = peso * 20.0;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Crioprecipitados') {
       dosisMl = peso * 10.0;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Plaquetas') {
       dosisMl = peso * 10.0;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'GRE/PFC') {
       dosisMl = peso * 5.0;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Ácido tranexámico') {
       dosisMl = peso * 15.0 / 100.0;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Solución hipertónica') {
       dosisMl = peso * 5.0;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Manitol') {
       dosisMl = peso / 0.2;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Solución hipertónica.') {
       dosisMl = peso * 4.0;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Diazepam IV') {
       dosisMl = (peso * 0.3) / 5;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Diazepam VR') {
       dosisMl = (peso * 0.5) / 5;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 0);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Midazolam IV o IM') {
       dosisMl = (peso * 0.3) / 5;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Solución mixta mantenimiento') {
-      // Componente 1: para <10 kg (C5*100)
-      double componente1 = 0.0;
-      if (peso <= 10) {
-        componente1 = peso * 100;
-      } else {
-        componente1 = 1000.0;
-      }
-      // Componente 2: para 10-20 kg ((C5-10)*50)
-      double componente2 = 0.0;
-      if (peso >= 10 && peso < 21) {
-        componente2 = (peso - 10) * 50;
-      } else if (peso >= 21) {
-        componente2 = 10 * 50;
-      }
-      double componente3 = 0.0;
-      if (peso > 20) {
-        componente3 = (peso - 20) * 20;
-      }
-      dosisMl = componente1 + componente2 + componente3;
+      dosisMl = _roundDose(hollidaySegar(peso));
+      return {'mg': 0.0, 'ml': dosisMl, 'julios': 0.0};
     } else if (medicamento.nombre == 'SG 25%') {
       dosisMl = (peso * 2);
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Sol glucosada mayor 1 mes edad') {
       final double dosisEnMg = peso * 0.5;
-      final double dosisRedondeada = _roundDouble(dosisEnMg, 1);
+      final double dosisRedondeada = _roundDose(dosisEnMg);
 
-      displayString = '${dosisRedondeada.toStringAsFixed(0)} g';
+      displayString = '${_fmt(dosisRedondeada)} g';
 
       return {
         'ml': 0.0,
@@ -376,19 +400,19 @@ class DosisCalculator {
       dosisMl = (peso * 0.4) / 5;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Fenitoína IV') {
       dosisMl = (peso * 20) / 50;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 0);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Fenobarbital') {
       dosisMl = (peso * 20) / 50;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 0);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Paracetamol oral IV') {
       dosisMg = (peso * 15.0).clamp(0.0, 1000.0);
@@ -412,214 +436,127 @@ class DosisCalculator {
       dosisMl = (peso * 0.6) / 4;
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 0);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Dexametazona') {
       dosisMl = 0.0;
       dosisMg = (peso * 0.1);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Hidrocortisona IV') {
       dosisMl = 0.0;
       dosisMg = (peso * 4).clamp(0.0, 100.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Metilprednisolona') {
       dosisMl = 0.0;
       dosisMg = (peso * 2).clamp(0.0, 60.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 1);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Sulf magnesio IV bolus') {
       dosisMl = 0.0;
       dosisMg = (peso * 50).clamp(0.0, 2000.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 1);
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Diazepam IV.') {
-      dosisMg = (peso * 0.1).clamp(0.0, 10.0);
-      dosisMl = (peso * 0.1).clamp(0.0, 10.0);
-      dosisJulios = 0.0;
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Valproato IV') {
-      dosisMg = (peso * 20).clamp(0.0, 1000.0);
-      dosisMl = (peso * 20).clamp(0.0, 1000.0);
-      dosisJulios = 0.0;
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Fenitoína IV.') {
-      dosisMg = (peso * 20).clamp(0.0, 1000.0);
-      dosisMl = (peso * 20).clamp(0.0, 1000.0);
-      dosisJulios = 0.0;
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Clonazepam VO') {
-      dosisMg = peso * 0.01;
-      dosisMl = peso * 0.01;
-      dosisJulios = 0.0;
-
-      dosisMg = _roundDouble(dosisMg, 1);
-      dosisMl = _roundDouble(dosisMl, 1);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Tiopental') {
-      dosisMg = (peso * 3).clamp(0.0, 500.0);
-      dosisMl = (peso * 3).clamp(0.0, 500.0);
-      dosisJulios = 0.0;
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Levetirazetam') {
-      dosisMg = (peso * 30).clamp(0.0, 4500.0);
-      dosisMl = (peso * 30).clamp(0.0, 4500.0);
-      dosisJulios = 0.0;
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
-
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Sol hipertónica 3%') {
-      dosisMg = (peso * 3);
-      dosisMl = (peso * 3);
-      dosisJulios = 0.0;
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Fenobarbital.') {
-      dosisMg = (peso * 20);
-      dosisMl = (peso * 20);
-      dosisJulios = 0.0;
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Paracetamol') {
-      dosisMg = (peso * 15);
-      dosisMl = (peso * 15);
-      dosisJulios = 0.0;
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Midazolam IV.') {
-      dosisMg = (peso * 0.15);
-      dosisMl = (peso * 0.15);
-      dosisJulios = 0.0;
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Metamizol IV.') {
-      dosisMg = (peso * 6).clamp(0.0, 1000.0);
-      dosisMl = (peso * 6).clamp(0.0, 1000.0);
-      dosisJulios = 0.0;
-
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
+      // Volumen en ml/kg (2-5 ml/kg): no se expresa en mg.
+      dosisMl = _roundDose(peso * 3);
+      return {'mg': 0.0, 'ml': dosisMl, 'julios': 0.0};
+    } else if (_dosisSoloMg.containsKey(medicamento.nombre)) {
+      // Sin concentración definida en los datos → solo se muestran mg.
+      // (Antes se devolvía ml = mg, p. ej. "600 ml 600 mg".)
+      final (mgKg, maxMg) = _dosisSoloMg[medicamento.nombre]!;
+      dosisMg = peso * mgKg;
+      if (maxMg != null) dosisMg = dosisMg.clamp(0.0, maxMg);
+      return {'mg': _roundDose(dosisMg), 'ml': 0.0, 'julios': 0.0};
     } else if (medicamento.nombre == 'Ampicilina') {
       dosisMl = 0.0;
       dosisMg = (peso * 50).clamp(0.0, 3000.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Cefotaxima') {
       dosisMl = 0.0;
       dosisMg = ((peso * 200) / 4).clamp(0.0, 4000.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Ceftazidime') {
       dosisMl = 0.0;
       dosisMg = (peso * 50);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Meropenem') {
       dosisMl = 0.0;
       dosisMg = ((peso * 60) / 3).clamp(0.0, 2000.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Vancomicina') {
       dosisMl = 0.0;
       dosisMg = (peso * 15).clamp(0.0, 500.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Aciclovir') {
       dosisMl = 0.0;
       dosisMg = ((peso * 60) / 3).clamp(0.0, 1000.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Ceftriaxona') {
       dosisMl = 0.0;
       dosisMg = (peso * 100).clamp(0.0, 4000.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Pipe-tazo') {
       dosisMl = 0.0;
       dosisMg = ((peso * 300) / 4).clamp(0.0, 3500.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Amoxi-clav') {
       dosisMl = 0.0;
       dosisMg = ((peso * 90) / 2).clamp(0.0, 1000.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Amikacina') {
       dosisMl = 0.0;
       dosisMg = ((peso * 22.5) / 3).clamp(0.0, 1500.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Clindamicina') {
       dosisMl = 0.0;
-      dosisMg = ((peso * 40) / 3).clamp(0.0, 1000.0);
+      // Tope 1,8 g por dosis, igual que la tabla Excel "para APP".
+      dosisMg = ((peso * 40) / 3).clamp(0.0, 1800.0);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Morfina') {
       dosisMl = 0.0;
       dosisMg = (peso * 1.5);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Midazolam') {
       dosisMl = 0.0;
       dosisMg = (peso * 6);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Dopamina / Dobutamina') {
       dosisMl = 0.0;
       dosisMg = (peso * 15);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Gluconato de calcio 10%') {
       dosisMg = 0.0;
@@ -641,40 +578,7 @@ class DosisCalculator {
       dosisMl = ((peso * 10) / 100).clamp(0.0, 1000.0);
       dosisMg = 0.0;
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 0);
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Déficit de HCO3') {
-      const double sodioDelPaciente = 7;
-      const double constante = 0.5;
-
-      dosisMl = (15 - sodioDelPaciente) * peso * constante;
-      dosisMg = 0.0;
-      dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre ==
-        'Volumen de SG5% a diluir déficit de HCO3') {
-      const double sodioDelPaciente = 7;
-      const double constante = 0.5;
-      final double volumenHco3 = (15 - sodioDelPaciente) * peso * constante;
-
-      dosisMl = volumenHco3 * 7;
-      dosisMg = 0.0;
-      dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
-
-      return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
-    } else if (medicamento.nombre == 'Velocidad de Infusión.') {
-      const double sodioDelPaciente = 7;
-      const double constante = 0.5;
-      final double volumenHco3 = (15 - sodioDelPaciente) * peso * constante;
-      final double dosisCloruroCalcio = volumenHco3 * 7;
-      dosisMl = dosisCloruroCalcio / 3;
-      dosisMg = 0.0;
-      dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 1);
-
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Fentanilo') {
       final double dosisUg = 250 * peso;
@@ -682,9 +586,9 @@ class DosisCalculator {
       dosisMl = 0.0;
       dosisJulios = 0.0;
 
-      return {'display_string': '${_roundDouble(dosisUg, 0)} µg'};
+      return {'display_string': '${_fmt(_roundDose(dosisUg))} µg'};
     } else if (medicamento.nombre == 'Volumen de SF') {
-      final double dosisMl = _roundDouble((peso * 0.5 * 1000) / 40, 0);
+      final double dosisMl = _roundDose((peso * 0.5 * 1000) / 40);
       final double dosisMeq = peso * 1;
 
       return {
@@ -697,10 +601,10 @@ class DosisCalculator {
         dosisMg = 0.0;
         dosisMl = 0.0;
         dosisJulios = 0.0;
-        return {'display_string': '${_roundDouble(resultadoFormula, 0)} UI'};
+        return {'display_string': '${_fmt(_roundDose(resultadoFormula))} UI'};
       } else if (medicamento.categoria == 'Electrolitos') {
         dosisMg = 0.0;
-        dosisMl = _roundDouble(resultadoFormula, 0);
+        dosisMl = _roundDose(resultadoFormula);
         dosisJulios = 0.0;
         return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
       } else {
@@ -710,21 +614,22 @@ class DosisCalculator {
       dosisMl = 0.0;
       dosisMg = (peso * 0.5);
       dosisJulios = 0.0;
-      dosisMg = _roundDouble(dosisMg, 0);
+      dosisMg = _roundDose(dosisMg);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Solución glucosada al 10%') {
       dosisMg = 0.0;
       dosisMl = (peso * 5);
       dosisJulios = 0.0;
-      dosisMl = _roundDouble(dosisMl, 0);
+      dosisMl = _roundDose(dosisMl);
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Morfina.') {
-      dosisMl = (peso * 0.1).clamp(0.0, 10.0);
-      dosisMg = (peso * 0.1);
+      // 15 mg + 14 ml SF → 1 mg/ml. Máx 10 ml = 10 mg.
+      dosisMg = (peso * 0.1).clamp(0.0, 10.0);
+      dosisMl = dosisMg;
       dosisJulios = 0.0;
 
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
+      dosisMg = _roundDose(dosisMg);
+      dosisMl = _roundDose(dosisMl);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Fentanilo.') {
@@ -733,15 +638,15 @@ class DosisCalculator {
 
       return {
         'display_string':
-            '${_roundDouble(dosisMl, 1)} ml, ${_roundDouble(dosisUg, 0)} µg',
+            '${_fmt(_roundDose(dosisMl))} ml, ${_fmt(_roundDose(dosisUg))} µg',
       };
     } else if (medicamento.nombre == 'Ketamina') {
       dosisMl = (peso * 1) / 10;
       dosisMg = (peso * 1);
       dosisJulios = 0.0;
 
-      dosisMg = _roundDouble(dosisMg, 0);
-      dosisMl = _roundDouble(dosisMl, 0);
+      dosisMg = _roundDose(dosisMg);
+      dosisMl = _roundDose(dosisMl);
 
       return {'mg': dosisMg, 'ml': dosisMl, 'julios': dosisJulios};
     } else if (medicamento.nombre == 'Salbutamol nebulizado') {

@@ -6,6 +6,7 @@ import 'package:mi_app/models/paciente.dart';
 import 'package:mi_app/utils/dosis_calculator_meses.dart';
 import 'package:mi_app/screens/printable_patient_data_screen.dart';
 import 'package:mi_app/models/medicamento_calculado.dart';
+import 'package:mi_app/utils/calc_messages.dart';
 import '../l10n/app_localizations.dart';
 
 // ✅ i18n meds
@@ -15,10 +16,14 @@ class MedicamentoDetailMesesScreen extends StatefulWidget {
   final Medicamento medicamento;
   final Paciente paciente;
 
+  /// Para el reporte: peso estimado (true), medido (false) o no se sabe.
+  final bool? esPesoEstimado;
+
   const MedicamentoDetailMesesScreen({
     super.key,
     required this.medicamento,
     required this.paciente,
+    this.esPesoEstimado,
   });
 
   @override
@@ -245,7 +250,7 @@ class _MedicamentoDetailMesesScreenState
 
     final medicamentoCalculadoParaImprimir = MedicamentoCalculado(
       medicamentoOriginal: med,
-      dosisDisplayString: _displayStringForPrint,
+      dosisDisplayString: CalcMsg.localize(_displayStringForPrint, t),
     );
 
     return Scaffold(
@@ -261,6 +266,8 @@ class _MedicamentoDetailMesesScreenState
                 MaterialPageRoute(
                   builder: (_) => PrintablePatientDataScreen(
                     paciente: widget.paciente,
+                    esPesoEstimado: widget.esPesoEstimado,
+                    esLactante: true,
                     medicamentosCalculados: [medicamentoCalculadoParaImprimir],
                   ),
                 ),
@@ -327,7 +334,7 @@ class _MedicamentoDetailMesesScreenState
                         return Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _dosePill(d),
+                            _dosePill(CalcMsg.localize(d, t)),
                             const SizedBox(width: 6),
                             IconButton(
                               icon: const Icon(Icons.copy),

@@ -15,10 +15,14 @@ class MedicamentoDetailScreen extends StatefulWidget {
   final Medicamento medicamento;
   final Paciente paciente;
 
+  /// Para el reporte: peso estimado (true), medido (false) o no se sabe.
+  final bool? esPesoEstimado;
+
   const MedicamentoDetailScreen({
     super.key,
     required this.medicamento,
     required this.paciente,
+    this.esPesoEstimado,
   });
 
   @override
@@ -283,6 +287,8 @@ class _MedicamentoDetailScreenState extends State<MedicamentoDetailScreen> {
                 MaterialPageRoute(
                   builder: (_) => PrintablePatientDataScreen(
                     paciente: widget.paciente,
+                    esPesoEstimado: widget.esPesoEstimado,
+                    esLactante: false,
                     medicamentosCalculados: [medicamentoCalculadoParaImprimir],
                   ),
                 ),

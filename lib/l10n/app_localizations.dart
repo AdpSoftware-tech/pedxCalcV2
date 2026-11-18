@@ -143,7 +143,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickSummaryBody.
   ///
   /// In es, this message translates to:
-  /// **'• Se recomienda poner el peso si está disponible.\n• Si se desconoce el peso Pedx estima el peso según la edad de forma automática.\n• Verifica siempre las dosis con protocolo/guía local antes de administrar.\n• Estos cálculos son aplicables para la población de 1 mes a 18 años.'**
+  /// **'• Se recomienda poner el peso si está disponible.\n• Si se desconoce el peso Pedx estima el peso según la edad de forma automática.\n• Verifica siempre las dosis con protocolo/guía local antes de administrar.\n• Estos cálculos son aplicables para la población de 1 mes a 14 años.'**
   String get quickSummaryBody;
 
   /// No description provided for @termsAccept.
@@ -347,13 +347,13 @@ abstract class AppLocalizations {
   /// No description provided for @ageSelectQuestion.
   ///
   /// In es, this message translates to:
-  /// **'¿Cual es el rango de edad del paciente?'**
+  /// **'¿Cuál es el rango de edad del paciente?'**
   String get ageSelectQuestion;
 
   /// No description provided for @ageYearsTitle.
   ///
   /// In es, this message translates to:
-  /// **'Mayor a 1 año'**
+  /// **'1 año o más'**
   String get ageYearsTitle;
 
   /// No description provided for @ageYearsSubtitle.
@@ -365,7 +365,7 @@ abstract class AppLocalizations {
   /// No description provided for @ageSelectNote.
   ///
   /// In es, this message translates to:
-  /// **'Sino tienes el peso se puede estimar usando solo la edad.'**
+  /// **'Si no tienes el peso, se puede estimar usando solo la edad.'**
   String get ageSelectNote;
 
   /// No description provided for @commonBadge.
@@ -377,7 +377,7 @@ abstract class AppLocalizations {
   /// No description provided for @ageMonthsTitle.
   ///
   /// In es, this message translates to:
-  /// **'Menor a 1 año'**
+  /// **'Menos de 1 año'**
   String get ageMonthsTitle;
 
   /// No description provided for @ageMonthsSubtitle.
@@ -666,7 +666,7 @@ abstract class AppLocalizations {
   ///
   /// In es, this message translates to:
   /// **'{weight} kg · {age} años'**
-  String patientHeaderSummaryYears(Object age, Object weight);
+  String patientHeaderSummaryYears(Object weight, Object age);
 
   /// No description provided for @medDetailPrintTooltip.
   ///
@@ -1217,7 +1217,7 @@ abstract class AppLocalizations {
   /// No description provided for @sectionLiquidsIV.
   ///
   /// In es, this message translates to:
-  /// **'Líquids IV'**
+  /// **'Líquidos IV'**
   String get sectionLiquidsIV;
 
   /// No description provided for @sectionHco3.
@@ -1589,25 +1589,25 @@ abstract class AppLocalizations {
   /// No description provided for @o2AppBarTitle.
   ///
   /// In es, this message translates to:
-  /// **'Saturación de oxígeno (SpO₂)'**
+  /// **'Saturación de oxígeno (SpO2)'**
   String get o2AppBarTitle;
 
   /// No description provided for @o2CardTitle.
   ///
   /// In es, this message translates to:
-  /// **'Saturación de oxígeno (SpO₂)'**
+  /// **'Saturación de oxígeno (SpO2)'**
   String get o2CardTitle;
 
   /// No description provided for @o2Paragraph1.
   ///
   /// In es, this message translates to:
-  /// **'SpO₂ es menor en el período neonatal inmediato.'**
+  /// **'SpO2 es menor en el período neonatal inmediato.'**
   String get o2Paragraph1;
 
   /// No description provided for @o2Paragraph2Part1.
   ///
   /// In es, this message translates to:
-  /// **'Más allá de este período, una SpO₂ de '**
+  /// **'Más allá de este período, una SpO2 de '**
   String get o2Paragraph2Part1;
 
   /// No description provided for @o2ThresholdBold.
@@ -2591,19 +2591,19 @@ abstract class AppLocalizations {
   /// No description provided for @specHco3Patient.
   ///
   /// In es, this message translates to:
-  /// **'HCO₃ del paciente'**
+  /// **'HCO3 del paciente'**
   String get specHco3Patient;
 
   /// No description provided for @specHco3Deficit.
   ///
   /// In es, this message translates to:
-  /// **'Déficit de HCO₃'**
+  /// **'Déficit de HCO3'**
   String get specHco3Deficit;
 
   /// No description provided for @specHco3Sg5Volume.
   ///
   /// In es, this message translates to:
-  /// **'Volumen de SG 5% para diluir déficit de HCO₃'**
+  /// **'Volumen de SG 5% para diluir déficit de HCO3'**
   String get specHco3Sg5Volume;
 
   /// No description provided for @specHco3InfusionRate.
@@ -4399,6 +4399,492 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Adolescente 14-36F'**
   String get medPleuralDrainCatheterNotes;
+
+  /// No description provided for @patientValWeightRange.
+  ///
+  /// In es, this message translates to:
+  /// **'El peso debe estar entre {min} y {max} kg. Revise el valor ingresado.'**
+  String patientValWeightRange(String min, String max);
+
+  /// No description provided for @calcNeedSodium.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa el sodio del paciente'**
+  String get calcNeedSodium;
+
+  /// No description provided for @calcNeedHco3.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa el HCO3 del paciente'**
+  String get calcNeedHco3;
+
+  /// No description provided for @calcNoSodiumDeficit.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin déficit (Na ≥ 130 mEq/L)'**
+  String get calcNoSodiumDeficit;
+
+  /// No description provided for @calcNoHco3Deficit.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin déficit (HCO3 ≥ 15 mEq/L)'**
+  String get calcNoHco3Deficit;
+
+  /// No description provided for @termsPdfTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Términos y Condiciones'**
+  String get termsPdfTitle;
+
+  /// No description provided for @termsPdfNotAvailable.
+  ///
+  /// In es, this message translates to:
+  /// **'El documento de Términos y Condiciones no está disponible en este momento.'**
+  String get termsPdfNotAvailable;
+
+  /// No description provided for @termsButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Términos'**
+  String get termsButton;
+
+  /// No description provided for @securityButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguridad'**
+  String get securityButton;
+
+  /// No description provided for @tabCardiacArrest.
+  ///
+  /// In es, this message translates to:
+  /// **'Paro cardíaco'**
+  String get tabCardiacArrest;
+
+  /// No description provided for @tabIntubation.
+  ///
+  /// In es, this message translates to:
+  /// **'Intubación'**
+  String get tabIntubation;
+
+  /// No description provided for @tabRespiratory.
+  ///
+  /// In es, this message translates to:
+  /// **'Respiratorio'**
+  String get tabRespiratory;
+
+  /// No description provided for @tabCardiovascular.
+  ///
+  /// In es, this message translates to:
+  /// **'Cardiovascular'**
+  String get tabCardiovascular;
+
+  /// No description provided for @tabAnaphylaxis.
+  ///
+  /// In es, this message translates to:
+  /// **'Anafilaxia'**
+  String get tabAnaphylaxis;
+
+  /// No description provided for @tabShock.
+  ///
+  /// In es, this message translates to:
+  /// **'Shock'**
+  String get tabShock;
+
+  /// No description provided for @tabElectrolytes.
+  ///
+  /// In es, this message translates to:
+  /// **'Electrolitos'**
+  String get tabElectrolytes;
+
+  /// No description provided for @tabAnalgesiaFever.
+  ///
+  /// In es, this message translates to:
+  /// **'Analgesia/fiebre'**
+  String get tabAnalgesiaFever;
+
+  /// No description provided for @tabOther.
+  ///
+  /// In es, this message translates to:
+  /// **'Otros'**
+  String get tabOther;
+
+  /// No description provided for @favAdd.
+  ///
+  /// In es, this message translates to:
+  /// **'Agregar a favoritos'**
+  String get favAdd;
+
+  /// No description provided for @favRemove.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar de favoritos'**
+  String get favRemove;
+
+  /// No description provided for @favEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tienes favoritos. Toca la estrella ☆ de un medicamento para agregarlo.'**
+  String get favEmpty;
+
+  /// No description provided for @languageDialogTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Seleccionar idioma'**
+  String get languageDialogTitle;
+
+  /// No description provided for @languageSwitchTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar idioma'**
+  String get languageSwitchTooltip;
+
+  /// No description provided for @securityPlaceholderBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Información sobre seguridad de la aplicación.'**
+  String get securityPlaceholderBody;
+
+  /// No description provided for @calcNeedAge.
+  ///
+  /// In es, this message translates to:
+  /// **'Requiere la edad'**
+  String get calcNeedAge;
+
+  /// No description provided for @pdMonthsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa los datos (1–11 meses)'**
+  String get pdMonthsTitle;
+
+  /// No description provided for @pdMonthsHowBody.
+  ///
+  /// In es, this message translates to:
+  /// **'• Puedes calcular con el peso, con la edad o con ambos.\n• Si solo ingresas la edad, usamos un peso estimado.\n• La edad se necesita para calcular el tubo endotraqueal (TET).\n• Confirma el peso real lo antes posible.'**
+  String get pdMonthsHowBody;
+
+  /// No description provided for @pdAgeMonthsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Edad (meses)'**
+  String get pdAgeMonthsLabel;
+
+  /// No description provided for @pdAgeMonthsHelper.
+  ///
+  /// In es, this message translates to:
+  /// **'Opcional · de 1 a 11 meses'**
+  String get pdAgeMonthsHelper;
+
+  /// No description provided for @pdWeightLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Peso (kg)'**
+  String get pdWeightLabel;
+
+  /// No description provided for @pdWeightHelperOptional.
+  ///
+  /// In es, this message translates to:
+  /// **'Opcional · si no lo tienes, se estima por la edad'**
+  String get pdWeightHelperOptional;
+
+  /// No description provided for @pdEstimatedWeight.
+  ///
+  /// In es, this message translates to:
+  /// **'Peso estimado: {peso} kg'**
+  String pdEstimatedWeight(String peso);
+
+  /// No description provided for @pdRealWeight.
+  ///
+  /// In es, this message translates to:
+  /// **'Peso real: {peso} kg'**
+  String pdRealWeight(String peso);
+
+  /// No description provided for @pdNoAgeTetWarning.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin la edad no se calcula el tubo endotraqueal (TET).'**
+  String get pdNoAgeTetWarning;
+
+  /// No description provided for @pdEstimatedHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Confírmalo con el peso real lo antes posible.'**
+  String get pdEstimatedHint;
+
+  /// No description provided for @pdYearsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa los datos (1–14 años)'**
+  String get pdYearsTitle;
+
+  /// No description provided for @pdYearsHowBody.
+  ///
+  /// In es, this message translates to:
+  /// **'• Puedes calcular con el peso, con la edad o con ambos.\n• Si solo ingresas la edad, usamos un peso estimado.\n• Confirma el peso real lo antes posible.'**
+  String get pdYearsHowBody;
+
+  /// No description provided for @pdAgeYearsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Edad (años)'**
+  String get pdAgeYearsLabel;
+
+  /// No description provided for @pdAgeYearsHelper.
+  ///
+  /// In es, this message translates to:
+  /// **'Opcional · de 1 a 14 años'**
+  String get pdAgeYearsHelper;
+
+  /// No description provided for @calcRate3h.
+  ///
+  /// In es, this message translates to:
+  /// **'Velocidad de infusión (en 3 h)'**
+  String get calcRate3h;
+
+  /// No description provided for @calcPercentGuide.
+  ///
+  /// In es, this message translates to:
+  /// **'Guía: riesgo SIADH 80 % · CAF/VMA 60–70 % · LRA + NVO 45 % · LRA + VO 30 %'**
+  String get calcPercentGuide;
+
+  /// No description provided for @calcPercentLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Porcentaje de requerimientos'**
+  String get calcPercentLabel;
+
+  /// No description provided for @calcSodiumLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Sodio del paciente'**
+  String get calcSodiumLabel;
+
+  /// No description provided for @calcHco3Label.
+  ///
+  /// In es, this message translates to:
+  /// **'HCO3 del paciente'**
+  String get calcHco3Label;
+
+  /// No description provided for @calcClearTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Limpiar valores'**
+  String get calcClearTooltip;
+
+  /// No description provided for @calcInputsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Datos para el cálculo'**
+  String get calcInputsTitle;
+
+  /// No description provided for @printPatientAge.
+  ///
+  /// In es, this message translates to:
+  /// **'Edad'**
+  String get printPatientAge;
+
+  /// No description provided for @printPatientWeight.
+  ///
+  /// In es, this message translates to:
+  /// **'Peso'**
+  String get printPatientWeight;
+
+  /// No description provided for @printPatientGroup.
+  ///
+  /// In es, this message translates to:
+  /// **'Grupo'**
+  String get printPatientGroup;
+
+  /// No description provided for @printPatientAttended.
+  ///
+  /// In es, this message translates to:
+  /// **'Fecha y hora'**
+  String get printPatientAttended;
+
+  /// No description provided for @printGroupInfant.
+  ///
+  /// In es, this message translates to:
+  /// **'Lactante (1–11 meses)'**
+  String get printGroupInfant;
+
+  /// No description provided for @printGroupChild.
+  ///
+  /// In es, this message translates to:
+  /// **'Niño (1–14 años)'**
+  String get printGroupChild;
+
+  /// No description provided for @printAgeNotEntered.
+  ///
+  /// In es, this message translates to:
+  /// **'No ingresada'**
+  String get printAgeNotEntered;
+
+  /// No description provided for @printWeightEstimated.
+  ///
+  /// In es, this message translates to:
+  /// **'ESTIMADO por edad'**
+  String get printWeightEstimated;
+
+  /// No description provided for @printWeightMeasured.
+  ///
+  /// In es, this message translates to:
+  /// **'medido'**
+  String get printWeightMeasured;
+
+  /// No description provided for @printNameLine.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre'**
+  String get printNameLine;
+
+  /// No description provided for @printRecordLine.
+  ///
+  /// In es, this message translates to:
+  /// **'Expediente'**
+  String get printRecordLine;
+
+  /// No description provided for @printDisclaimer.
+  ///
+  /// In es, this message translates to:
+  /// **'Verifique las dosis con su protocolo local antes de administrar.'**
+  String get printDisclaimer;
+
+  /// No description provided for @vsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Signos vitales'**
+  String get vsTitle;
+
+  /// No description provided for @vsSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Valores normales según la edad'**
+  String get vsSubtitle;
+
+  /// No description provided for @vsHrSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Latidos por minuto (lpm)'**
+  String get vsHrSub;
+
+  /// No description provided for @vsRrSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Respiraciones por minuto (rpm)'**
+  String get vsRrSub;
+
+  /// No description provided for @vsBpSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Sistólica / diastólica (mmHg)'**
+  String get vsBpSub;
+
+  /// No description provided for @vsTempSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Grados centígrados (°C)'**
+  String get vsTempSub;
+
+  /// No description provided for @vsO2Sub.
+  ///
+  /// In es, this message translates to:
+  /// **'SpO2 (%)'**
+  String get vsO2Sub;
+
+  /// No description provided for @pamTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Presión arterial media'**
+  String get pamTitle;
+
+  /// No description provided for @pamSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige la tabla según el sexo del paciente'**
+  String get pamSubtitle;
+
+  /// No description provided for @pamWomen.
+  ///
+  /// In es, this message translates to:
+  /// **'Mujeres'**
+  String get pamWomen;
+
+  /// No description provided for @pamMen.
+  ///
+  /// In es, this message translates to:
+  /// **'Hombres'**
+  String get pamMen;
+
+  /// No description provided for @pamTableSub.
+  ///
+  /// In es, this message translates to:
+  /// **'Tabla de presión arterial por edad'**
+  String get pamTableSub;
+
+  /// No description provided for @vtPatientRow.
+  ///
+  /// In es, this message translates to:
+  /// **'Paciente'**
+  String get vtPatientRow;
+
+  /// No description provided for @vtCardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Rangos normales por edad'**
+  String get vtCardTitle;
+
+  /// No description provided for @pamColMin.
+  ///
+  /// In es, this message translates to:
+  /// **'Mínima'**
+  String get pamColMin;
+
+  /// No description provided for @pamColMean.
+  ///
+  /// In es, this message translates to:
+  /// **'Media'**
+  String get pamColMean;
+
+  /// No description provided for @pamColMax.
+  ///
+  /// In es, this message translates to:
+  /// **'Máxima'**
+  String get pamColMax;
+
+  /// No description provided for @pamRowPam.
+  ///
+  /// In es, this message translates to:
+  /// **'PAM'**
+  String get pamRowPam;
+
+  /// No description provided for @pamRowSysDia.
+  ///
+  /// In es, this message translates to:
+  /// **'PA sist./diast.'**
+  String get pamRowSysDia;
+
+  /// No description provided for @pamCardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Valores por edad (mmHg)'**
+  String get pamCardTitle;
+
+  /// No description provided for @aboutTagline.
+  ///
+  /// In es, this message translates to:
+  /// **'Calculadora pediátrica de dosis y signos vitales'**
+  String get aboutTagline;
+
+  /// No description provided for @aboutVersionLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'Versión'**
+  String get aboutVersionLabel;
+
+  /// No description provided for @aboutDocuments.
+  ///
+  /// In es, this message translates to:
+  /// **'Documentos'**
+  String get aboutDocuments;
 }
 
 class _AppLocalizationsDelegate
